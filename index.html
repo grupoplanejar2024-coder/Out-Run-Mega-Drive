@@ -313,6 +313,137 @@
         #game-container.active { display: block; }
         #game { width: 100%; height: 100%; }
 
+        /* Controle Visual Completo de 6 Botões do Mega Drive */
+        #md-gamepad-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: 100000;
+        }
+        body.playing #md-gamepad-overlay {
+            display: block;
+        }
+
+        .md-pad-group {
+            position: absolute;
+            bottom: 24px;
+            left: 20px;
+            width: 136px;
+            height: 136px;
+            pointer-events: auto;
+            touch-action: none;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        .md-dpad-btn {
+            position: absolute;
+            width: 44px;
+            height: 44px;
+            background: rgba(34, 34, 34, 0.82);
+            border: 2px solid rgba(255, 255, 255, 0.22);
+            color: #fff;
+            font-size: 15px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+        .md-dpad-btn.active,
+        .md-dpad-btn:active {
+            background: rgba(231, 76, 60, 0.9);
+            border-color: #fff;
+        }
+        .md-up    { top: 0; left: 46px; }
+        .md-down  { bottom: 0; left: 46px; }
+        .md-left  { top: 46px; left: 0; }
+        .md-right { top: 46px; right: 0; }
+        .md-center-hub {
+            position: absolute;
+            top: 46px;
+            left: 46px;
+            width: 44px;
+            height: 44px;
+            background: rgba(20, 20, 20, 0.85);
+            border-radius: 50%;
+            pointer-events: none;
+        }
+
+        .md-sys-group {
+            position: absolute;
+            bottom: 22px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 12px;
+            pointer-events: auto;
+            touch-action: none;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        .md-sys-btn {
+            padding: 7px 14px;
+            border-radius: 14px;
+            background: rgba(30, 30, 30, 0.85);
+            border: 1.5px solid rgba(255, 255, 255, 0.28);
+            color: #eee;
+            font-size: 10px;
+            font-weight: 900;
+            letter-spacing: 1px;
+            cursor: pointer;
+        }
+        .md-sys-btn.active,
+        .md-sys-btn:active {
+            background: rgba(231, 76, 60, 0.9);
+            color: #fff;
+        }
+
+        .md-face-group {
+            position: absolute;
+            bottom: 22px;
+            right: 18px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            pointer-events: auto;
+            touch-action: none;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        .md-row {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+        .md-btn {
+            width: 46px;
+            height: 46px;
+            border-radius: 50%;
+            border: 2px solid rgba(255, 255, 255, 0.25);
+            font-size: 15px;
+            font-weight: 900;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.55);
+        }
+        .md-btn-top {
+            background: rgba(45, 45, 50, 0.86);
+        }
+        .md-btn-main {
+            background: rgba(145, 28, 22, 0.88);
+        }
+        .md-btn.active,
+        .md-btn:active {
+            transform: scale(0.94);
+            border-color: #ffd700;
+            filter: brightness(1.25);
+        }
+
         #error-box {
             display: none;
             position: fixed;
@@ -350,6 +481,16 @@
         @media (max-width: 400px) {
             .case { --w: 164px; --h: 230px; --d: 32px; }
             .scene { height: 325px; }
+            .md-pad-group { width: 120px; height: 120px; bottom: 18px; left: 12px; }
+            .md-dpad-btn { width: 38px; height: 38px; font-size: 13px; }
+            .md-up { top: 0; left: 41px; }
+            .md-down { bottom: 0; left: 41px; }
+            .md-left { top: 41px; left: 0; }
+            .md-right { top: 41px; right: 0; }
+            .md-center-hub { top: 41px; left: 41px; width: 38px; height: 38px; }
+            .md-btn { width: 40px; height: 40px; font-size: 13px; }
+            .md-face-group { bottom: 18px; right: 12px; gap: 8px; }
+            .md-row { gap: 8px; }
         }
     </style>
 </head>
@@ -365,7 +506,7 @@
                 <div class="hang-tab"></div>
 
                 <div class="face face-front" id="front">
-                    <img id="cover-img" src="out%20run%20mega%20drive.png" alt="Capa OutRun">
+                    <img id="cover-img" src="out%20run%20mega%20drive.png" alt="Capa OutRun">[cite: 7]
                 </div>
 
                 <div class="face face-back">
@@ -420,6 +561,35 @@
 
     <div id="game-container">
         <div id="game"></div>
+    </div>
+
+    <!-- Controle Completo do Mega Drive (D-Pad + A, B, C, X, Y, Z + START, MODE) -->
+    <div id="md-gamepad-overlay" aria-hidden="true">
+        <div class="md-pad-group">
+            <button type="button" class="md-dpad-btn md-up" data-key="ArrowUp" data-code="ArrowUp" data-keynum="38">▲</button>
+            <button type="button" class="md-dpad-btn md-left" data-key="ArrowLeft" data-code="ArrowLeft" data-keynum="37">◀</button>
+            <div class="md-center-hub"></div>
+            <button type="button" class="md-dpad-btn md-right" data-key="ArrowRight" data-code="ArrowRight" data-keynum="39">▶</button>
+            <button type="button" class="md-dpad-btn md-down" data-key="ArrowDown" data-code="ArrowDown" data-keynum="40">▼</button>
+        </div>
+
+        <div class="md-sys-group">
+            <button type="button" class="md-sys-btn" data-key="Shift" data-code="ShiftLeft" data-keynum="16">MODE</button>
+            <button type="button" class="md-sys-btn" data-key="Enter" data-code="Enter" data-keynum="13">START</button>
+        </div>
+
+        <div class="md-face-group">
+            <div class="md-row">
+                <button type="button" class="md-btn md-btn-top" data-key="q" data-code="KeyQ" data-keynum="81">X</button>
+                <button type="button" class="md-btn md-btn-top" data-key="w" data-code="KeyW" data-keynum="87">Y</button>
+                <button type="button" class="md-btn md-btn-top" data-key="e" data-code="KeyE" data-keynum="69">Z</button>
+            </div>
+            <div class="md-row">
+                <button type="button" class="md-btn md-btn-main" data-key="z" data-code="KeyZ" data-keynum="90">A</button>
+                <button type="button" class="md-btn md-btn-main" data-key="x" data-code="KeyX" data-keynum="88">B</button>
+                <button type="button" class="md-btn md-btn-main" data-key="c" data-code="KeyC" data-keynum="67">C</button>
+            </div>
+        </div>
     </div>
 
     <div id="error-box"></div>
@@ -514,7 +684,60 @@
         render();
         rafId = requestAnimationFrame(tick);
 
-        /* ================== EMULADOR (CONTROLE ESTILO MEGA DRIVE) ================== */
+        /* ================== ÁUDIO E CONTROLE MEGA DRIVE ================== */
+        function desbloquearAudio() {
+            var AudioCtx = window.AudioContext || window.webkitAudioContext;
+            if (AudioCtx) {
+                if (!window.__kuboAudioCtx) {
+                    window.__kuboAudioCtx = new AudioCtx();
+                }
+                if (window.__kuboAudioCtx.state === 'suspended') {
+                    window.__kuboAudioCtx.resume().catch(function () {});
+                }
+            }
+        }
+
+        function dispararTecla(type, btnEl) {
+            var key = btnEl.getAttribute('data-key');
+            var code = btnEl.getAttribute('data-code');
+            var keyNum = parseInt(btnEl.getAttribute('data-keynum'), 10);
+
+            var ev = new KeyboardEvent(type, {
+                key: key,
+                code: code,
+                keyCode: keyNum,
+                which: keyNum,
+                bubbles: true,
+                cancelable: true
+            });
+            window.dispatchEvent(ev);
+            document.dispatchEvent(ev);
+        }
+
+        (function initControleMegaDrive() {
+            var padBtns = document.querySelectorAll('#md-gamepad-overlay [data-key]');
+            padBtns.forEach(function (btn) {
+                function press(e) {
+                    e.preventDefault();
+                    desbloquearAudio();
+                    btn.classList.add('active');
+                    dispararTecla('keydown', btn);
+                }
+                function release(e) {
+                    e.preventDefault();
+                    btn.classList.remove('active');
+                    dispararTecla('keyup', btn);
+                }
+                btn.addEventListener('pointerdown', press);
+                btn.addEventListener('pointerup', release);
+                btn.addEventListener('pointercancel', release);
+                btn.addEventListener('pointerleave', function (e) {
+                    if (btn.classList.contains('active')) release(e);
+                });
+            });
+        })();
+
+        /* ================== EMULADOR ================== */
         var ROM_CANDIDATES = [
             'Out-Run.sms',
             'out-run.sms',
@@ -567,6 +790,8 @@
         async function iniciarJogo() {
             if (started) return;
             started = true;
+            desbloquearAudio();
+
             var btn = document.getElementById('play-btn');
             btn.disabled = true;
             btn.textContent = 'A CARREGAR...';
@@ -590,77 +815,4 @@
             document.getElementById('game-container').classList.add('active');
             document.body.classList.add('playing');
 
-            window.EJS_player = '#game';
-            window.EJS_core = 'segaMS';
-            window.EJS_controlScheme = 'segaMD';
-            window.EJS_gameName = 'OutRun';
-            window.EJS_color = '#e74c3c';
-            window.EJS_language = 'pt-BR';
-            window.EJS_startOnLoaded = true;
-            window.EJS_gameUrl = romUrl;
-            window.EJS_pathtodata = 'https://cdn.emulatorjs.org/stable/data/';
-
-            /* Layout virtual no estilo do controle de 3 botões (A, B, C) + START do Mega Drive */
-            window.EJS_VirtualGamepadSettings = [
-                {
-                    type: 'dpad',
-                    location: 'left',
-                    left: '8%',
-                    joystickInput: false,
-                    inputValues: [4, 5, 6, 7]
-                },
-                {
-                    type: 'button',
-                    location: 'center',
-                    text: 'START',
-                    id: 'md-start',
-                    fontSize: 16,
-                    bold: true,
-                    input_value: 3
-                },
-                {
-                    type: 'button',
-                    location: 'right',
-                    text: 'A',
-                    id: 'md-a',
-                    fontSize: 24,
-                    bold: true,
-                    right: 170,
-                    top: 60,
-                    input_value: 8
-                },
-                {
-                    type: 'button',
-                    location: 'right',
-                    text: 'B',
-                    id: 'md-b',
-                    fontSize: 24,
-                    bold: true,
-                    right: 100,
-                    top: 30,
-                    input_value: 0
-                },
-                {
-                    type: 'button',
-                    location: 'right',
-                    text: 'C',
-                    id: 'md-c',
-                    fontSize: 24,
-                    bold: true,
-                    right: 30,
-                    top: 0,
-                    input_value: 1
-                }
-            ];
-
-            const script = document.createElement('script');
-            script.src = 'https://cdn.emulatorjs.org/stable/data/loader.js';
-            script.onerror = function () {
-                showError('Não foi possível carregar o EmulatorJS (cdn.emulatorjs.org). Verifique sua conexão com a internet ou bloqueadores de conteúdo.');
-            };
-            document.body.appendChild(script);
-        }
-    </script>
-
-</body>
-</html>
+            window.E
