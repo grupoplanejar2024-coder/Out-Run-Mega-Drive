@@ -506,7 +506,7 @@
                 <div class="hang-tab"></div>
 
                 <div class="face face-front" id="front">
-                    <img id="cover-img" src="out%20run%20mega%20drive.png" alt="Capa OutRun">[cite: 7]
+                    <img id="cover-img" src="out%20run%20mega%20drive.png" alt="Capa OutRun">
                 </div>
 
                 <div class="face face-back">
@@ -533,7 +533,7 @@
             </div>
             <div class="floor-shadow"></div>
         </div>
-        <div class="hint">Arraste para girar a caixa 3D</div>
+        <div class="hint">Arrasta para girar a caixa 3D</div>
 
         <div class="content">
             <h1>OutRun</h1>
@@ -555,7 +555,7 @@
                 </ul>
             </div>
 
-            <button id="play-btn" class="btn-play" onclick="iniciarJogo()">JOGAR AGORA</button>
+            <button id="play-btn" type="button" class="btn-play">JOGAR AGORA</button>
         </div>
     </div>
 
@@ -760,7 +760,7 @@
                 html += '<br><br><b>Resultado dos testes:</b>';
                 details.forEach(function (d) { html += '<code>' + escapeHtml(d) + '</code>'; });
             }
-            html += '<button onclick="location.reload()">Voltar ao menu</button>';
+            html += '<button type="button" onclick="location.reload()">Voltar ao menu</button>';
             var box = document.getElementById('error-box');
             box.innerHTML = html;
             box.classList.add('active');
@@ -775,10 +775,12 @@
             for (var i = 0; i < ROM_CANDIDATES.length; i++) {
                 var url = new URL(ROM_CANDIDATES[i], window.location.href).href;
                 try {
-                    var r = await fetch(url, { method: 'HEAD' });
+                    var r = await fetch(url, { method: 'GET', cache: 'no-store' });
                     if (!r.ok) { log.push('HTTP ' + r.status + ' → ' + url); continue; }
                     var type = (r.headers.get('content-type') || '').toLowerCase();
                     if (type.indexOf('text/html') !== -1) { log.push('Retornou página HTML → ' + url); continue; }
+                    var buf = await r.arrayBuffer();
+                    if (!buf || buf.byteLength < 16384) { log.push('Ficheiro inválido ou vazio (' + (buf ? buf.byteLength : 0) + ' bytes) → ' + url); continue; }
                     return { url: url, log: log };
                 } catch (e) {
                     log.push('Falha de rede/CORS → ' + url);
@@ -802,7 +804,7 @@
             if (!found.url && window.location.protocol !== 'file:') {
                 btn.textContent = 'JOGAR AGORA';
                 showError(
-                    'Não foi possível localizar o ficheiro da ROM na pasta do projeto. Verifique se o arquivo da ROM está na mesma pasta do <b>index.html</b> e acessível pelo servidor/GitHub Pages.',
+                    'Não foi possível localizar o ficheiro da ROM na pasta do projeto. Confirma se <b>Out-Run.sms</b> está na mesma pasta do <b>index.html</b> e acessível pelo GitHub Pages.',
                     found.log
                 );
                 return;
@@ -815,4 +817,34 @@
             document.getElementById('game-container').classList.add('active');
             document.body.classList.add('playing');
 
-            window.E
+            window.EJS_player = '#game';
+            window.EJS_core = 'segaMS';
+            window.EJS_controlScheme = 'segaMD';
+            window.EJS_gameName = 'OutRun';
+            window.EJS_color = '#e74c3c';
+            window.EJS_language = 'pt-BR';
+            window.EJS_startOnLoaded = true;
+            window.EJS_gameUrl = romUrl;
+            window.EJS_pathtodata = 'https://cdn.emulatorjs.org/stable/data/';
+
+            window.EJS_defaultOptions = {
+                'sound': 'enabled',
+                'audio_latency': '64',
+                'audio_resampler': 'sinc',
+                'audio_sync': 'enabled',
+                'video_vsync': 'enabled'
+            };
+
+            var script = document.createElement('script');
+            script.src = 'https://cdn.emulatorjs.org/stable/data/loader.js';
+            script.onerror = function () {
+                showError('Não foi possível carregar o EmulatorJS (cdn.emulatorjs.org). Verifica a tua ligação à internet ou bloqueadores de conteúdo.');
+            };
+            document.body.appendChild(script);
+        }
+
+        document.getElementById('play-btn').addEventListener('click', iniciarJogo);
+    </script>
+
+</body>
+</html>
