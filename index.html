@@ -49,7 +49,7 @@
             box-shadow: 0 10px 30px rgba(0,0,0,0.7);
         }
 
-        /* ---------- CAIXA 3D ---------- */
+        /* ---------- CAIXA 3D DO MEGA DRIVE / GENESIS ---------- */
         .scene {
             position: relative;
             width: 100%;
@@ -313,6 +313,40 @@
         #game-container.active { display: block; }
         #game { width: 100%; height: 100%; }
 
+        #error-box {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            z-index: 100001;
+            background: #121212;
+            padding: 24px;
+            overflow-y: auto;
+            line-height: 1.6;
+            font-size: 14px;
+        }
+        #error-box.active { display: block; }
+        #error-box b.err { color: #e74c3c; }
+        #error-box code {
+            display: block;
+            background: #1e1e1e;
+            padding: 8px;
+            border-radius: 4px;
+            margin: 4px 0;
+            word-break: break-all;
+            font-size: 12px;
+            color: #ccc;
+        }
+        #error-box button {
+            margin-top: 16px;
+            padding: 10px 18px;
+            background: #555;
+            border: none;
+            border-radius: 6px;
+            color: #fff;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
         @media (max-width: 400px) {
             .case { --w: 164px; --h: 230px; --d: 32px; }
             .scene { height: 325px; }
@@ -331,11 +365,11 @@
                 <div class="hang-tab"></div>
 
                 <div class="face face-front" id="front">
-                    <img src="out%20run%20mega%20drive.png" alt="Capa OutRun">
+                    <img id="cover-img" src="out%20run%20mega%20drive.png" alt="Capa OutRun">
                 </div>
 
                 <div class="face face-back">
-                    <div class="back-header">SEGA</div>
+                    <div class="back-header">GENESIS</div>
                     <div class="back-art">
                         <strong>OUTRUN</strong>
                         Acelere a toda a velocidade ao volante de um conversível vermelho em rotas panorâmicas, escolhendo bifurcações e bandas sonoras clássicas contra o relógio.
@@ -347,9 +381,9 @@
                 </div>
 
                 <div class="face face-left">
-                    <span class="spine-system">SEGA</span>
+                    <span class="spine-system">GENESIS</span>
                     <span class="spine-title">OUTRUN</span>
-                    <span class="spine-sega">1987</span>
+                    <span class="spine-sega">SEGA</span>
                 </div>
 
                 <div class="face face-right"></div>
@@ -358,7 +392,7 @@
             </div>
             <div class="floor-shadow"></div>
         </div>
-        <div class="hint">Arrasta para girar a caixa 3D</div>
+        <div class="hint">Arraste para girar a caixa 3D</div>
 
         <div class="content">
             <h1>OutRun</h1>
@@ -366,7 +400,7 @@
             <div class="meta-info">
                 <span>🎮 1 Jogador</span>
                 <span>📅 1987</span>
-                <span>🕹️ SEGA</span>
+                <span>🕹️ SEGA (Mega Drive)</span>
             </div>
 
             <p class="description">
@@ -376,7 +410,7 @@
             <div class="details">
                 <ul>
                     <li><strong>🕹️ Género:</strong> Corrida</li>
-                    <li><strong>💾 Plataforma:</strong> SEGA</li>
+                    <li><strong>💾 Plataforma:</strong> SEGA / Mega Drive</li>
                 </ul>
             </div>
 
@@ -388,7 +422,28 @@
         <div id="game"></div>
     </div>
 
+    <div id="error-box"></div>
+
     <script>
+        /* Garante carregamento da imagem da capa caso haja variação de extensão/espaços */
+        (function () {
+            var coverImg = document.getElementById('cover-img');
+            var fallbacks = [
+                'out%20run%20mega%20drive.png',
+                'out run mega drive.png',
+                'outrun.png',
+                'outrun.jpg',
+                'outrun.jpeg'
+            ];
+            var idx = 0;
+            coverImg.addEventListener('error', function () {
+                idx++;
+                if (idx < fallbacks.length) {
+                    coverImg.src = fallbacks[idx];
+                }
+            });
+        })();
+
         /* ================== CAIXA 3D INTERATIVA ================== */
         var scene    = document.getElementById('scene');
         var gameCase = document.getElementById('game-case');
@@ -460,7 +515,74 @@
         rafId = requestAnimationFrame(tick);
 
         /* ================== EMULADOR (CONTROLE ESTILO MEGA DRIVE) ================== */
-        function iniciarJogo() {
+        var ROM_CANDIDATES = [
+            'Out-Run.sms',
+            'out-run.sms',
+            'OutRun.sms',
+            'OutRun.md',
+            'Out-Run.md',
+            'OutRun.gen'
+        ];
+        var started = false;
+
+        function escapeHtml(s) {
+            return String(s).replace(/[&<>"]/g, function (c) {
+                return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c];
+            });
+        }
+
+        function showError(msg, details) {
+            var html = '<b class="err">Erro ao iniciar o jogo</b><br><br>' + msg;
+            if (details && details.length) {
+                html += '<br><br><b>Resultado dos testes:</b>';
+                details.forEach(function (d) { html += '<code>' + escapeHtml(d) + '</code>'; });
+            }
+            html += '<button onclick="location.reload()">Voltar ao menu</button>';
+            var box = document.getElementById('error-box');
+            box.innerHTML = html;
+            box.classList.add('active');
+            document.getElementById('game-container').classList.remove('active');
+            document.body.classList.remove('playing');
+            started = false;
+            document.getElementById('play-btn').disabled = false;
+        }
+
+        async function findRom() {
+            var log = [];
+            for (var i = 0; i < ROM_CANDIDATES.length; i++) {
+                var url = new URL(ROM_CANDIDATES[i], window.location.href).href;
+                try {
+                    var r = await fetch(url, { method: 'HEAD' });
+                    if (!r.ok) { log.push('HTTP ' + r.status + ' → ' + url); continue; }
+                    var type = (r.headers.get('content-type') || '').toLowerCase();
+                    if (type.indexOf('text/html') !== -1) { log.push('Retornou página HTML → ' + url); continue; }
+                    return { url: url, log: log };
+                } catch (e) {
+                    log.push('Falha de rede/CORS → ' + url);
+                }
+            }
+            return { url: null, log: log };
+        }
+
+        async function iniciarJogo() {
+            if (started) return;
+            started = true;
+            var btn = document.getElementById('play-btn');
+            btn.disabled = true;
+            btn.textContent = 'A CARREGAR...';
+
+            var found = await findRom();
+            var romUrl = found.url || 'Out-Run.sms';
+
+            if (!found.url && window.location.protocol !== 'file:') {
+                btn.textContent = 'JOGAR AGORA';
+                showError(
+                    'Não foi possível localizar o ficheiro da ROM na pasta do projeto. Verifique se o arquivo da ROM está na mesma pasta do <b>index.html</b> e acessível pelo servidor/GitHub Pages.',
+                    found.log
+                );
+                return;
+            }
+
             if (rafId) cancelAnimationFrame(rafId);
 
             document.getElementById('header-bar').style.display = 'none';
@@ -475,7 +597,7 @@
             window.EJS_color = '#e74c3c';
             window.EJS_language = 'pt-BR';
             window.EJS_startOnLoaded = true;
-            window.EJS_gameUrl = 'Out-Run.sms';
+            window.EJS_gameUrl = romUrl;
             window.EJS_pathtodata = 'https://cdn.emulatorjs.org/stable/data/';
 
             /* Layout virtual no estilo do controle de 3 botões (A, B, C) + START do Mega Drive */
@@ -533,6 +655,9 @@
 
             const script = document.createElement('script');
             script.src = 'https://cdn.emulatorjs.org/stable/data/loader.js';
+            script.onerror = function () {
+                showError('Não foi possível carregar o EmulatorJS (cdn.emulatorjs.org). Verifique sua conexão com a internet ou bloqueadores de conteúdo.');
+            };
             document.body.appendChild(script);
         }
     </script>
