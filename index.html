@@ -125,7 +125,7 @@
 
             <div class="meta-info">
                 <span>🎮 1 Jogador</span>
-                <span>📅 1991</span>
+                <span>📅 1987</span>
                 <span>🕹️ SEGA</span>
             </div>
 
@@ -153,7 +153,7 @@
             const card = document.getElementById('cover-3d');
             if (!scene || !card) return;
 
-            const maxTilt = 16; // graus de inclinação
+            const maxTilt = 16;
 
             function updateTilt(clientX, clientY) {
                 const rect = scene.getBoundingClientRect();
@@ -197,10 +197,9 @@
             document.getElementById('game-container').style.display = 'block';
 
             window.EJS_player = '#game';
-            window.EJS_core = 'segaMD';
+            window.EJS_core = 'segaMS';
             window.EJS_gameName = 'OutRun';
-            // Substitua pelo nome exato do seu ficheiro ROM (.md ou .bin) no repositório
-            window.EJS_gameUrl = 'OutRun.md';
+            window.EJS_gameUrl = 'Out-Run.sms';
             window.EJS_pathtodata = 'https://cdn.emulatorjs.org/stable/data/';
 
             const script = document.createElement('script');
