@@ -104,7 +104,6 @@
             display: block;
             -webkit-user-drag: none;
         }
-        /* Brilho plástico da capa */
         .face-front::after {
             content: '';
             position: absolute;
@@ -225,13 +224,214 @@
             transform: rotateX(90deg) translateZ(calc(var(--h) / 2));
             background: linear-gradient(180deg, #1c1c1c, #111);
         }
-        .hang-tab {
-            position: absolute;
-            top: -16px;
-            left: 50%;
-            transform: translateX(-50%) translateZ(0px);
-            width: 52px;
-            height: 16px;
-            background: #181818;
-            border: 1px solid #333;
-            border
+        .face-bottom {
+            width: var(--w);
+            height: var(--d);
+            top: calc((var(--h) - var(--d)) / 2);
+            transform: rotateX(-90deg) translateZ(calc(var(--h) / 2));
+            background: linear-gradient(180deg, #111, #1c1c1c);
+        }
+
+        .content {
+            padding: 20px;
+        }
+
+        h1 {
+            margin: 0 0 10px 0;
+            font-size: 22px;
+            color: #e5e5e5;
+        }
+
+        .meta-info {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 15px;
+            font-size: 13px;
+            color: #aaa;
+        }
+
+        .description {
+            font-size: 14px;
+            line-height: 1.5;
+            color: #ddd;
+            margin-bottom: 20px;
+        }
+
+        .btn-play {
+            display: block;
+            width: 100%;
+            padding: 16px;
+            background: #b81d24;
+            color: #fff;
+            border: 1px solid #e03a42;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 18px;
+            cursor: pointer;
+            text-align: center;
+        }
+        .btn-play:hover { background: #cf232b; }
+
+        #game-container {
+            display: none;
+            position: fixed;
+            inset: 0;
+            width: 100vw;
+            height: 100dvh;
+            z-index: 99999;
+            background: #000;
+        }
+
+        #game {
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+</head>
+<body>
+
+    <header id="header-bar">
+        <span class="badge">KUBO TOUCH • MEGA DRIVE</span>
+    </header>
+
+    <div id="game-card">
+        <div class="scene" id="scene">
+            <div class="case" id="case3d">
+                <div class="face face-front" id="frontFace">
+                    <img src="./outrun-md.jpg" alt="Capa OutRun Mega Drive">
+                </div>
+                <div class="face face-back">
+                    <div class="back-header">MEGA DRIVE</div>
+                    <div class="back-art">
+                        <strong>OUTRUN</strong>
+                        Acelere pela estrada com a Ferrari conversível e escolha o seu destino antes que o tempo acabe!
+                    </div>
+                    <div class="back-footer">
+                        <span class="sega-mini">SEGA</span>
+                        <span>16-BIT</span>
+                    </div>
+                </div>
+                <div class="face face-left">
+                    <span class="spine-system">MEGA DRIVE</span>
+                    <span class="spine-title">OUTRUN</span>
+                    <span class="spine-sega">SEGA</span>
+                </div>
+                <div class="face face-right"></div>
+                <div class="face face-top"></div>
+                <div class="face face-bottom"></div>
+            </div>
+        </div>
+
+        <div class="content">
+            <h1>OutRun</h1>
+            <div class="meta-info">
+                <span>🎮 1 Jogador</span>
+                <span>🕹️ Mega Drive</span>
+                <span>🏎️ Corrida</span>
+            </div>
+            <p class="description">
+                Clássico de corrida arcade da Sega no Mega Drive. Escolha sua trilha sonora e enfrente rotas com curvas e tráfego em alta velocidade.
+            </p>
+            <button id="play-btn" class="btn-play" type="button">JOGAR AGORA</button>
+        </div>
+    </div>
+
+    <div id="game-container">
+        <div id="game"></div>
+    </div>
+
+    <script>
+        /* Rotação interativa da caixa 3D */
+        const scene = document.getElementById('scene');
+        const caseEl = document.getElementById('case3d');
+        const frontFace = document.getElementById('frontFace');
+
+        let rotX = -10;
+        let rotY = -22;
+        let isDragging = false;
+        let startX = 0;
+        let startY = 0;
+
+        function updateCaseTransform() {
+            caseEl.style.transform = `rotateX(${rotX}deg) rotateY(${rotY}deg)`;
+            const shinePos = Math.max(10, Math.min(90, 50 + rotY * 1.1));
+            frontFace.style.setProperty('--shine', `${shinePos}%`);
+        }
+        updateCaseTransform();
+
+        scene.addEventListener('pointerdown', (e) => {
+            isDragging = true;
+            startX = e.clientX;
+            startY = e.clientY;
+            scene.classList.add('grabbing');
+            scene.setPointerCapture(e.pointerId);
+        });
+
+        scene.addEventListener('pointermove', (e) => {
+            if (!isDragging) return;
+            const dx = e.clientX - startX;
+            const dy = e.clientY - startY;
+            startX = e.clientX;
+            startY = e.clientY;
+
+            rotY += dx * 0.45;
+            rotX = Math.max(-45, Math.min(45, rotX - dy * 0.35));
+            updateCaseTransform();
+        });
+
+        function stopDragging() {
+            if (!isDragging) return;
+            isDragging = false;
+            scene.classList.remove('grabbing');
+        }
+        scene.addEventListener('pointerup', stopDragging);
+        scene.addEventListener('pointercancel', stopDragging);
+
+        /* Configuração do EmulatorJS no padrão Mega Drive */
+        // Ajuste para o nome exato da ROM no seu repositório
+        const ROM_FILE = './OutRun (World).md';
+
+        document.getElementById('play-btn').addEventListener('click', () => {
+            document.body.classList.add('playing');
+            document.getElementById('header-bar').style.display = 'none';
+            document.getElementById('game-card').style.display = 'none';
+            document.getElementById('game-container').style.display = 'block';
+
+            window.EJS_player = '#game';
+            window.EJS_core = 'segaMD';
+            window.EJS_gameName = 'OutRun';
+            window.EJS_gameUrl = encodeURI(ROM_FILE);
+            window.EJS_pathtodata = 'https://cdn.emulatorjs.org/stable/data/';
+            window.EJS_startOnLoaded = true;
+            window.EJS_fullscreenOnLoaded = false;
+
+            // Botões padrão do controle de Mega Drive (A, B, C, Start, Mode e D-Pad)
+            window.EJS_Buttons = {
+                playPause: true,
+                restart: true,
+                mute: true,
+                settings: true,
+                fullscreen: true,
+                saveState: true,
+                loadState: true,
+                screenRecord: false,
+                gamepad: true,
+                cheat: false,
+                volume: true,
+                saveSavFiles: false,
+                loadSavFiles: false,
+                quickSave: false,
+                quickLoad: false,
+                screenshot: false,
+                cacheManager: false
+            };
+
+            const script = document.createElement('script');
+            script.src = 'https://cdn.emulatorjs.org/stable/data/loader.js';
+            script.async = true;
+            document.body.appendChild(script);
+        });
+    </script>
+</body>
+</html>
