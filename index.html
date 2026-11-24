@@ -299,7 +299,7 @@
         <div class="scene" id="scene">
             <div class="case" id="case3d">
                 <div class="face face-front" id="frontFace">
-                    <img src="./outrun-md.jpg" alt="Capa OutRun Mega Drive">
+                    <img src="./out%20run%20mega%20drive.png" alt="Capa OutRun Mega Drive">
                 </div>
                 <div class="face face-back">
                     <div class="back-header">MEGA DRIVE</div>
@@ -309,7 +309,7 @@
                     </div>
                     <div class="back-footer">
                         <span class="sega-mini">SEGA</span>
-                        <span>16-BIT</span>
+                        <span>ARCADE</span>
                     </div>
                 </div>
                 <div class="face face-left">
@@ -327,11 +327,11 @@
             <h1>OutRun</h1>
             <div class="meta-info">
                 <span>🎮 1 Jogador</span>
-                <span>🕹️ Mega Drive</span>
+                <span>🕹️ OutRun</span>
                 <span>🏎️ Corrida</span>
             </div>
             <p class="description">
-                Clássico de corrida arcade da Sega no Mega Drive. Escolha sua trilha sonora e enfrente rotas com curvas e tráfego em alta velocidade.
+                Clássico de corrida arcade da Sega. Escolha sua trilha sonora e enfrente rotas com curvas e tráfego em alta velocidade.
             </p>
             <button id="play-btn" class="btn-play" type="button">JOGAR AGORA</button>
         </div>
@@ -388,9 +388,10 @@
         scene.addEventListener('pointerup', stopDragging);
         scene.addEventListener('pointercancel', stopDragging);
 
-        /* Configuração do EmulatorJS no padrão Mega Drive */
-        // Ajuste para o nome exato da ROM no seu repositório
-        const ROM_FILE = './OutRun (World).md';
+        /* Configuração do EmulatorJS */
+        // No repositório atual está 'Out-Run.sms' (use 'segaMD' apenas se enviar uma ROM .md/.bin de Mega Drive)
+        const ROM_FILE = './Out-Run.sms';
+        const CORE_NAME = ROM_FILE.toLowerCase().endsWith('.sms') ? 'sms' : 'segaMD';
 
         document.getElementById('play-btn').addEventListener('click', () => {
             document.body.classList.add('playing');
@@ -399,33 +400,12 @@
             document.getElementById('game-container').style.display = 'block';
 
             window.EJS_player = '#game';
-            window.EJS_core = 'segaMD';
+            window.EJS_core = CORE_NAME;
             window.EJS_gameName = 'OutRun';
             window.EJS_gameUrl = encodeURI(ROM_FILE);
             window.EJS_pathtodata = 'https://cdn.emulatorjs.org/stable/data/';
             window.EJS_startOnLoaded = true;
             window.EJS_fullscreenOnLoaded = false;
-
-            // Botões padrão do controle de Mega Drive (A, B, C, Start, Mode e D-Pad)
-            window.EJS_Buttons = {
-                playPause: true,
-                restart: true,
-                mute: true,
-                settings: true,
-                fullscreen: true,
-                saveState: true,
-                loadState: true,
-                screenRecord: false,
-                gamepad: true,
-                cheat: false,
-                volume: true,
-                saveSavFiles: false,
-                loadSavFiles: false,
-                quickSave: false,
-                quickLoad: false,
-                screenshot: false,
-                cacheManager: false
-            };
 
             const script = document.createElement('script');
             script.src = 'https://cdn.emulatorjs.org/stable/data/loader.js';
