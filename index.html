@@ -1,61 +1,216 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-BR">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-<meta name="theme-color" content="#111111">
-<title>OutRun - Kubo Touch | Mega Drive</title>
-<style>
-*{box-sizing:border-box}html,body{margin:0;min-height:100%;background:#080808;color:#fff;font-family:Arial,Helvetica,sans-serif}body{padding:12px;background-image:linear-gradient(rgba(255,255,255,.035) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.035) 1px,transparent 1px);background-size:24px 24px}.wrap{max-width:900px;margin:auto}.header{text-align:center;padding:8px 4px 14px}.header h1{margin:0;font-size:clamp(24px,5vw,38px);letter-spacing:2px;color:#ff5722;text-shadow:2px 2px #fff}.header p{margin:6px 0;color:#bbb;font-size:13px;letter-spacing:2px}.card{background:#151515;border:1px solid #333;border-radius:14px;overflow:hidden;box-shadow:0 10px 30px #0008}.cover{width:100%;max-height:420px;object-fit:contain;display:block;background:#000}.launch{padding:16px;text-align:center}.play{display:block;width:100%;max-width:460px;margin:auto;padding:16px;border:0;border-radius:10px;background:linear-gradient(90deg,#ff3d00,#ff9800);color:#fff;font-size:20px;font-weight:900;letter-spacing:2px;cursor:pointer}.play:active{transform:scale(.98)}.hint{color:#aaa;font-size:13px;margin:12px 0 0}.screen-wrap{display:none;padding:8px;background:#000}.screen-wrap.active{display:block}#game{width:100%;min-height:240px;aspect-ratio:4/3;background:#000;position:relative}#game canvas{width:100%!important;height:100%!important;object-fit:contain}.controls-note{text-align:center;color:#aaa;font-size:12px;padding:12px}.footer{text-align:center;color:#777;font-size:11px;padding:14px}.fullscreen{margin:10px auto 0;display:block;padding:10px 16px;border-radius:8px;border:1px solid #555;background:#222;color:#fff;font-weight:bold}.error{color:#ff7777;text-align:center;padding:10px;display:none}.hidden{display:none!important}@media(max-width:600px){body{padding:6px}.card{border-radius:10px}.cover{max-height:350px}#game{min-height:220px}.header p{font-size:11px}}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#121212">
+
+    <title>OutRun - Kubo Touch</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        html, body {
+            margin: 0;
+            min-height: 100%;
+            background: #121212;
+            color: #fff;
+            font-family: Arial, sans-serif;
+            overscroll-behavior: none;
+        }
+
+        body {
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        header {
+            position: fixed;
+            top: 15px;
+            left: 15px;
+            z-index: 10;
+        }
+
+        .badge {
+            background: #d92626;
+            padding: 7px 12px;
+            border-radius: 5px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .game-card {
+            width: 100%;
+            max-width: 500px;
+            background: #1e1e1e;
+            border-radius: 18px;
+            overflow: hidden;
+            box-shadow: 0 4px 20px #0008;
+        }
+
+        .cover-container {
+            width: 100%;
+            height: 260px;
+            background: #000 url("outrun-cover.jpg") center / contain no-repeat;
+        }
+
+        .content {
+            padding: 20px;
+        }
+
+        h1 {
+            margin-top: 0;
+            color: #ff4d4d;
+            font-size: 25px;
+        }
+
+        .meta-info {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 15px;
+            color: #aaa;
+            font-size: 12px;
+        }
+
+        .description, .details {
+            font-size: 14px;
+            line-height: 1.6;
+            color: #ddd;
+        }
+
+        .details {
+            margin-bottom: 20px;
+        }
+
+        .btn-play {
+            display: block;
+            width: 100%;
+            padding: 14px;
+            border: 0;
+            border-radius: 7px;
+            background: #d92626;
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            touch-action: manipulation;
+        }
+
+        .btn-play:hover {
+            background: #a61c1c;
+        }
+
+        #game-container {
+            display: none;
+            position: fixed;
+            inset: 0;
+            z-index: 100;
+            width: 100%;
+            height: 100%;
+            background: #000;
+        }
+
+        #game-container.active {
+            display: block;
+        }
+
+        @media (max-width: 480px) {
+            body {
+                padding: 12px;
+            }
+            .cover-container {
+                height: 220px;
+            }
+            .content {
+                padding: 16px;
+            }
+        }
+    </style>
 </head>
+
 <body>
-<div class="wrap">
-<header class="header"><h1>KUBO TOUCH</h1><p>SEGA MEGA DRIVE • 16-BIT</p></header>
-<section class="card">
-<img class="cover" src="capa.png" alt="Capa de OutRun para Mega Drive" id="cover">
-<div class="launch" id="launch"><button class="play" id="playBtn">▶ JOGAR OUTRUN</button><p class="hint">Toque para carregar o jogo • Controles touchscreen disponíveis no emulador</p></div>
-<div class="screen-wrap" id="screenWrap"><div id="game"></div><button class="fullscreen" id="fullscreenBtn">⛶ TELA CHEIA</button></div>
-<div class="error" id="error">Não foi possível carregar o jogo. Confira se OutRun.gen está na mesma pasta do index.html.</div>
-</section>
-<div class="controls-note">Dica: no celular, use os controles virtuais do emulador. Para melhor desempenho, mantenha o navegador atualizado.</div>
-<footer class="footer">Kubo Touch • Projeto para navegador</footer>
-</div>
-<script>
-const playBtn=document.getElementById('playBtn');
-const launch=document.getElementById('launch');
-const screenWrap=document.getElementById('screenWrap');
-const game=document.getElementById('game');
-const errorBox=document.getElementById('error');
-let started=false;
-playBtn.addEventListener('click',()=>{
- if(started)return; started=true;
- launch.classList.add('hidden'); screenWrap.classList.add('active');
- window.EJS_player='#game';
- window.EJS_gameUrl='OutRun.gen';
- window.EJS_gameName='OutRun';
- window.EJS_core='segaMD';
- window.EJS_coreName='Genesis Plus GX';
- window.EJS_startOnLoaded=true;
- window.EJS_pathtodata='https://cdn.emulatorjs.org/stable/data/';
- window.EJS_color='#ff5722';
- window.EJS_backgroundColor='#000000';
- window.EJS_gameID=1;
- window.EJS_VirtualGamepad=true;
- window.EJS_loadState=false;
- window.EJS_disableAutoSave=false;
- window.EJS_fullscreenOnLoad=false;
- window.EJS_cheats=false;
- const script=document.createElement('script');
- script.src='https://cdn.emulatorjs.org/stable/data/loader.js';
- script.onerror=()=>{errorBox.style.display='block';};
- document.body.appendChild(script);
-});
-document.getElementById('fullscreenBtn').addEventListener('click',()=>{
- const target=game;
- if(target.requestFullscreen)target.requestFullscreen();
- else if(target.webkitRequestFullscreen)target.webkitRequestFullscreen();
-});
-</script>
+
+    <header>
+        <span class="badge">KUBO TOUCH</span>
+    </header>
+
+    <main class="game-card" id="game-card">
+        <div class="cover-container"></div>
+
+        <div class="content">
+            <h1>OutRun</h1>
+
+            <div class="meta-info">
+                <span>🎮 1 Jogador</span>
+                <span>📅 1991</span>
+                <span>🕹️ SEGA / Mega Drive</span>
+            </div>
+
+            <p class="description">
+                Acelere uma Ferrari Testarossa conversível contra o relógio por estradas costeiras e paisagens ensolaradas ao som de trilhas clássicas!
+            </p>
+
+            <div class="details">
+                <ul>
+                    <li><strong>🔥 Curiosidade:</strong> Permitiu escolher a música no rádio do carro antes de iniciar a corrida, incluindo a icônica "Magical Sound Shower".</li>
+                    <li><strong>⚡ Gênero:</strong> Corrida / Arcade</li>
+                </ul>
+            </div>
+
+            <button class="btn-play" id="play-button" onclick="startGame()">
+                JOGAR AGORA
+            </button>
+        </div>
+    </main>
+
+    <div id="game-container"></div>
+
+    <script>
+        function startGame() {
+            const container = document.getElementById("game-container");
+
+            document.getElementById("game-card").style.display = "none";
+            container.style.display = "block";
+            container.classList.add("active");
+            container.innerHTML = "";
+
+            // Configurações do EmulatorJS
+            window.EJS_player = "#game-container";
+            window.EJS_core = "segaMD";
+            window.EJS_gameUrl = "SUA_URL_DA_ROM_OUTRUN_AQUI.bin";
+            window.EJS_pathtodata = "https://cdn.emulatorjs.org/stable/data/";
+            window.EJS_gameName = "OutRun";
+            window.EJS_language = "pt-BR";
+            window.EJS_startOnLoaded = true;
+            
+            // Otimizações para corrigir tela preta/som sem vídeo em celulares
+            window.EJS_disableDatabases = true;
+            window.EJS_threads = false;
+            window.EJS_color1 = "#121212";
+            window.EJS_backgroundColor = "#000000";
+
+            const oldLoader = document.getElementById("emulatorjs-loader");
+            if (oldLoader) oldLoader.remove();
+
+            const script = document.createElement("script");
+            script.id = "emulatorjs-loader";
+            script.src = window.EJS_pathtodata + "loader.js";
+            script.async = true;
+
+            script.onerror = function () {
+                alert("Erro ao carregar o EmulatorJS. Verifique a conexão.");
+            };
+
+            document.body.appendChild(script);
+        }
+    </script>
+
 </body>
 </html>
