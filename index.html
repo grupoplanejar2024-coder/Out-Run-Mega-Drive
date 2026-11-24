@@ -389,28 +389,47 @@
         scene.addEventListener('pointercancel', stopDragging);
 
         /* Configuração do EmulatorJS */
-        // No repositório atual está 'Out-Run.sms' (use 'segaMD' apenas se enviar uma ROM .md/.bin de Mega Drive)
+        // Se enviar uma ROM .md ou .bin de Mega Drive, troque ROM_FILE para o arquivo .md/.bin
         const ROM_FILE = './Out-Run.sms';
-        const CORE_NAME = ROM_FILE.toLowerCase().endsWith('.sms') ? 'sms' : 'segaMD';
+        const CORE_NAME = ROM_FILE.toLowerCase().endsWith('.sms') ? 'segaMS' : 'segaMD';
+        const CDN_URLS = [
+            'https://cdn.emulatorjs.org/stable/data/',
+            'https://cdn.emulatorjs.org/latest/data/'
+        ];
+
+        function startEmulator(cdnIndex = 0) {
+            const gameDiv = document.getElementById('game');
+            gameDiv.innerHTML = '';
+
+            const oldScript = document.getElementById('ejs-loader');
+            if (oldScript) oldScript.remove();
+
+            window.EJS_player = '#game';
+            window.EJS_core = CORE_NAME;
+            window.EJS_gameName = 'OutRun';
+            window.EJS_gameUrl = encodeURI(ROM_FILE);
+            window.EJS_pathtodata = CDN_URLS[cdnIndex] || CDN_URLS[0];
+            window.EJS_startOnLoaded = true;
+            window.EJS_fullscreenOnLoaded = false;
+
+            const script = document.createElement('script');
+            script.id = 'ejs-loader';
+            script.src = window.EJS_pathtodata + 'loader.js';
+            script.async = true;
+            script.onerror = () => {
+                if (cdnIndex + 1 < CDN_URLS.length) {
+                    startEmulator(cdnIndex + 1);
+                }
+            };
+            document.body.appendChild(script);
+        }
 
         document.getElementById('play-btn').addEventListener('click', () => {
             document.body.classList.add('playing');
             document.getElementById('header-bar').style.display = 'none';
             document.getElementById('game-card').style.display = 'none';
             document.getElementById('game-container').style.display = 'block';
-
-            window.EJS_player = '#game';
-            window.EJS_core = CORE_NAME;
-            window.EJS_gameName = 'OutRun';
-            window.EJS_gameUrl = encodeURI(ROM_FILE);
-            window.EJS_pathtodata = 'https://cdn.emulatorjs.org/stable/data/';
-            window.EJS_startOnLoaded = true;
-            window.EJS_fullscreenOnLoaded = false;
-
-            const script = document.createElement('script');
-            script.src = 'https://cdn.emulatorjs.org/stable/data/loader.js';
-            script.async = true;
-            document.body.appendChild(script);
+            startEmulator(0);
         });
     </script>
 </body>
