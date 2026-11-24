@@ -1,127 +1,116 @@
 <!DOCTYPE html>
-<html lang="pt">
+<html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="theme-color" content="#d31926">
-    <title>OutRun - Sega Mega Drive | Kubo Touch</title>
-    <style>
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            user-select: none;
-            -webkit-user-select: none;
-        }
-        body {
-            background-color: #0b0b10;
-            color: #ffffff;
-            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-            overflow: hidden;
-        }
-        #header {
-            width: 100%;
-            max-width: 800px;
-            padding: 12px 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: linear-gradient(90deg, #d31926, #ff5e3a);
-            box-shadow: 0 4px 15px rgba(211, 25, 38, 0.4);
-            z-index: 10;
-        }
-        #header h1 {
-            font-size: 1.2rem;
-            font-weight: 800;
-            letter-spacing: 1px;
-            text-transform: uppercase;
-            font-style: italic;
-        }
-        #header span {
-            font-size: 0.75rem;
-            background: rgba(0, 0, 0, 0.4);
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-weight: 600;
-        }
-        #game-wrapper {
-            width: 100%;
-            max-width: 800px;
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            position: relative;
-            background: #000;
-        }
-        #game {
-            width: 100%;
-            height: 100%;
-            min-height: 75vh;
-        }
-        #rom-loader {
-            position: absolute;
-            inset: 0;
-            background: radial-gradient(circle at center, #1e1e2a 0%, #0b0b10 100%);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 24px;
-            text-align: center;
-            z-index: 20;
-        }
-        .car-badge {
-            font-size: 3rem;
-            margin-bottom: 12px;
-        }
-        #rom-loader h2 {
-            font-size: 1.5rem;
-            margin-bottom: 8px;
-            color: #ff4757;
-            font-style: italic;
-        }
-        #rom-loader p {
-            font-size: 0.9rem;
-            color: #a4b0be;
-            max-width: 400px;
-            margin-bottom: 24px;
-            line-height: 1.4;
-        }
-        .btn-upload {
-            background: linear-gradient(135deg, #ff4757, #d31926);
-            color: white;
-            border: none;
-            padding: 14px 28px;
-            font-size: 1rem;
-            font-weight: bold;
-            border-radius: 50px;
-            cursor: pointer;
-            box-shadow: 0 6px 20px rgba(255, 71, 87, 0.4);
-            transition: transform 0.15s ease;
-        }
-        .btn-upload:active {
-            transform: scale(0.96);
-        }
-        #rom-input {
-            display: none;
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#111111">
+<title>OutRun - Kubo Touch</title>
+<style>
+:root { color-scheme: dark; }
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body { margin:0; min-height:100%; width:100%; background:#111; color:#fff; font-family:Arial,sans-serif; }
+body { display:flex; flex-direction:column; align-items:center; padding-bottom:28px; }
+header { width:100%; padding:16px; text-align:center; background:#1c1c1c; border-bottom:1px solid #333; }
+.badge { display:inline-block; padding:7px 16px; border:1px solid #555; border-radius:20px; background:#292929; color:#fff; font-size:13px; font-weight:800; letter-spacing:1.5px; }
+#game-card { width:min(460px, calc(100% - 28px)); margin:24px auto; overflow:hidden; border:1px solid #333; border-radius:15px; background:#1c1c1c; box-shadow:0 14px 38px #000b; perspective:1100px; }
+.cartridge-stage { min-height:390px; display:flex; justify-content:center; align-items:center; padding:42px 20px; overflow:hidden; background:radial-gradient(ellipse at 50% 45%,#454545 0%,#242424 58%,#171717 100%); }
+.cartridge { position:relative; width:min(270px,72vw); aspect-ratio:0.79; padding:18px 17px 24px; border:2px solid #55585d; border-radius:13px 13px 9px 9px; background:linear-gradient(110deg,#34363a 0%,#17191c 24%,#292b2f 70%,#111 100%); box-shadow:0 23px 25px #000b,inset 0 3px 5px #ffffff28,inset 0 -10px 14px #0009; transform-style:preserve-3d; transition:transform .18s ease; }
+.cartridge::before { content:""; position:absolute; top:9px; left:12px; right:12px; height:9px; border-radius:4px; background:repeating-linear-gradient(90deg,#101113 0 7px,#44474b 7px 10px); box-shadow:0 1px 2px #fff2; }
+.cartridge::after { content:""; position:absolute; left:14px; right:14px; bottom:8px; height:8px; border-radius:2px; background:linear-gradient(#111,#45474b,#111); box-shadow:inset 0 1px 2px #fff2; }
+.label-frame { position:relative; width:100%; height:88%; margin-top:9px; padding:5px; border:1px solid #777; border-radius:3px; background:linear-gradient(135deg,#777,#222 35%,#555); box-shadow:0 7px 12px #000a,inset 0 1px 3px #fff5; transform:translateZ(9px); }
+.cartridge-label { display:block; width:100%; height:100%; object-fit:cover; object-position:center; border:1px solid #111; border-radius:1px; }
+.content { padding:22px; }
+h1 { margin:0 0 12px; font-size:26px; color:#f1f1f1; text-shadow:0 2px 5px #000; }
+.meta { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:16px; }
+.meta span { padding:6px 9px; border-radius:5px; background:#292929; color:#bbb; font-size:12px; }
+.description { margin:0 0 17px; color:#ddd; font-size:14px; line-height:1.65; }
+.details { margin:0 0 21px; padding-left:20px; color:#bbb; font-size:13px; line-height:1.8; }
+.play { width:100%; padding:16px; border:1px solid #e24b35; border-radius:8px; background:linear-gradient(145deg,#e34c32,#a51f1c); color:#fff; font-size:17px; font-weight:800; cursor:pointer; box-shadow:0 5px 12px #0006; }
+.play:active { transform:scale(.985); }
+.note { margin:12px 0 0; color:#999; font-size:11px; line-height:1.5; }
+#game-container { display:none; position:fixed; inset:0; z-index:99999; width:100%; height:100%; height:100dvh; background:#000; }
+#game { width:100%; height:100%; }
+#loading-message { display:none; position:fixed; z-index:100000; left:50%; top:50%; transform:translate(-50%,-50%); width:min(88%,360px); padding:18px; border:1px solid #555; border-radius:10px; background:#202020; color:#fff; text-align:center; line-height:1.5; }
+@media (max-width:480px) { .cartridge-stage { min-height:340px; padding:32px 15px; } .cartridge { width:min(245px,72vw); } .content { padding:18px; } h1 { font-size:23px; } }
+@media (prefers-reduced-motion:reduce) { .cartridge { transition:none; } }
+</style>
 </head>
 <body>
-
-    <div id="header">
-        <h1>OUTRUN</h1>
-        <span>MEGA DRIVE</span>
+<header id="header-bar"><span class="badge">KUBO TOUCH</span></header>
+<main id="game-card">
+  <section class="cartridge-stage" id="cartridge-stage" aria-label="Cartucho 3D do OutRun">
+    <div class="cartridge" id="cartridge3d">
+      <div class="label-frame">
+        <img class="cartridge-label" src="out run mega drive.png" alt="Capa do jogo OutRun para Sega Genesis" onerror="this.style.display='none'; this.parentElement.style.background='#171717'; this.parentElement.insertAdjacentHTML('beforeend','<div style=&quot;color:#fff;text-align:center;padding:35px 8px;font-weight:bold&quot;>OUTRUN<br><small>SEGA GENESIS</small><br><br>Coloque a imagem<br>out run mega drive.png<br>na mesma pasta do HTML</div>')">
+      </div>
     </div>
+  </section>
+  <section class="content">
+    <h1>OutRun</h1>
+    <div class="meta">
+      <span>🎮 1 Jogador</span><span>📅 1987 / versão Mega Drive 1991</span><span>🕹️ SEGA Genesis</span>
+    </div>
+    <p class="description">Assuma o volante, acelere por estradas ensolaradas e escolha seu caminho neste clássico de corrida da SEGA. Desvie do tráfego, domine as curvas e tente chegar ao final antes do tempo acabar.</p>
+    <ul class="details">
+      <li><strong>Gênero:</strong> Corrida / Arcade</li>
+      <li><strong>Console:</strong> Mega Drive / Genesis</li>
+      <li><strong>Desenvolvedora:</strong> SEGA</li>
+    </ul>
+    <button id="play-btn" class="play" type="button">🏎️ JOGAR AGORA</button>
+    <p class="note">A ROM deve estar na mesma pasta do HTML. Use somente uma cópia que você tenha direito de utilizar.</p>
+  </section>
+</main>
+<div id="game-container"><div id="game"></div></div>
+<div id="loading-message" role="status"></div>
+<script>
+// ARQUIVO DA ROM MEGA DRIVE:
+// Coloque a ROM compatível na mesma pasta e ajuste o nome abaixo.
+const ROM_FILE = './OutRun (USA).bin';
+// Para a ROM Mega Drive, mantenha segaMD. Não renomeie uma ROM .sms para .bin.
 
-    <div id="game-wrapper">
-        <!-- Visível apenas se HOSTED_ROM_URL estiver vazio ou se o carregamento automático falhar -->
-        <div id="rom-loader">
-            <div class="car-badge">🏎
+// Efeito 3D com mouse (desktop) e inclinação suave no retorno.
+const stage = document.getElementById('cartridge-stage');
+const cartridge = document.getElementById('cartridge3d');
+if (window.matchMedia('(hover: hover) and (pointer: fine)').matches) {
+  stage.addEventListener('mousemove', (event) => {
+    const rect = stage.getBoundingClientRect();
+    const x = (event.clientX - rect.left) / rect.width - 0.5;
+    const y = (event.clientY - rect.top) / rect.height - 0.5;
+    cartridge.style.transform = `rotateX(${-y * 12}deg) rotateY(${x * 15}deg) translateY(-3px)`;
+  });
+  stage.addEventListener('mouseleave', () => { cartridge.style.transform = 'rotateX(0) rotateY(0)'; });
+}
+
+let emulatorStarted = false;
+document.getElementById('play-btn').addEventListener('click', () => {
+  if (emulatorStarted) return;
+  emulatorStarted = true;
+  document.getElementById('header-bar').style.display = 'none';
+  document.getElementById('game-card').style.display = 'none';
+  document.getElementById('game-container').style.display = 'block';
+
+  // Configuração oficial do EmulatorJS para Sega Mega Drive.
+  window.EJS_player = '#game';
+  window.EJS_core = 'segaMD';
+  window.EJS_gameName = 'OutRun';
+  window.EJS_color = '#d52b24';
+  window.EJS_startOnLoaded = true;
+  window.EJS_pathtodata = 'https://cdn.emulatorjs.org/stable/data/';
+  window.EJS_gameUrl = ROM_FILE;
+  window.EJS_controlScheme = 'segaMD';
+  window.EJS_language = 'pt-BR';
+
+  const script = document.createElement('script');
+  script.src = 'https://cdn.emulatorjs.org/stable/data/loader.js';
+  script.async = true;
+  script.onerror = () => {
+    const msg = document.getElementById('loading-message');
+    msg.style.display = 'block';
+    msg.textContent = 'Não foi possível carregar o EmulatorJS. Verifique sua conexão e tente novamente.';
+    emulatorStarted = false;
+  };
+  document.body.appendChild(script);
+});
+</script>
+</body>
+</html>
