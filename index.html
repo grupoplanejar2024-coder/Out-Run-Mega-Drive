@@ -32,8 +32,10 @@ h1 { margin:0 0 12px; font-size:26px; color:#f1f1f1; text-shadow:0 2px 5px #000;
 #back-to-card { position:fixed; top:12px; left:12px; z-index:100001; padding:8px 12px; border:1px solid #555; border-radius:8px; background:#1c1c1cd9; color:#fff; font-size:12px; font-weight:700; cursor:pointer; }
 #back-to-card:active { transform:scale(.97); }
 #game { width:100%; height:100%; }
-#loading-message { display:none; position:fixed; z-index:100000; left:50%; top:50%; transform:translate(-50%,-50%); width:min(88%,380px); padding:20px; border:1px solid #555; border-radius:10px; background:#202020; color:#fff; text-align:center; line-height:1.5; box-shadow:0 12px 30px #000c; }
-#loading-message .retry-btn { margin-top:14px; padding:9px 16px; border:1px solid #777; border-radius:6px; background:#333; color:#fff; font-size:13px; font-weight:700; cursor:pointer; }
+#loading-message { display:none; position:fixed; z-index:100000; left:50%; top:50%; transform:translate(-50%,-50%); width:min(88%,390px); padding:20px; border:1px solid #555; border-radius:10px; background:#202020; color:#fff; text-align:center; line-height:1.5; box-shadow:0 12px 30px #000c; }
+#loading-message .actions { display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin-top:14px; }
+#loading-message .retry-btn { padding:9px 16px; border:1px solid #777; border-radius:6px; background:#333; color:#fff; font-size:13px; font-weight:700; cursor:pointer; }
+#loading-message .retry-btn.primary { border-color:#e24b35; background:#b82921; }
 @media (max-width:480px) { .cartridge-stage { min-height:340px; padding:32px 15px; } .cartridge { width:min(245px,72vw); } .content { padding:18px; } h1 { font-size:23px; } }
 @media (prefers-reduced-motion:reduce) { .cartridge { transition:none; } }
 </style>
@@ -73,6 +75,13 @@ h1 { margin:0 0 12px; font-size:26px; color:#f1f1f1; text-shadow:0 2px 5px #000;
 // Aponte para o ficheiro da ROM na mesma pasta (ex.: './Out-Run.sms' ou './OutRun (USA).bin').
 const ROM_FILE = './Out-Run.sms';
 
+// CDNs do EmulatorJS com fallback automático caso o download do núcleo falhe.
+const EJS_CDN_LIST = [
+  'https://cdn.emulatorjs.org/stable/data/',
+  'https://cdn.jsdelivr.net/gh/EmulatorJS/EmulatorJS@main/data/',
+  'https://rawcdn.githack.com/EmulatorJS/EmulatorJS/main/data/'
+];
+
 function detectCoreFromRom(romPath) {
   const cleanUrl = romPath.split('?')[0].split('#')[0].toLowerCase();
   if (cleanUrl.endsWith('.sms')) return 'sms';
@@ -98,29 +107,49 @@ const gameContainer = document.getElementById('game-container');
 const backToCardBtn = document.getElementById('back-to-card');
 const playBtn = document.getElementById('play-btn');
 const loadingMsg = document.getElementById('loading-message');
+const gameEl = document.getElementById('game');
 
 let emulatorStarted = false;
 let isLaunching = false;
+let currentCdnIndex = 0;
 
-function showStatus(text, allowRetry = false) {
+function returnToCard() {
+  loadingMsg.style.display = 'none';
+  gameContainer.style.display = 'none';
+  headerBar.style.display = '';
+  gameCard.style.display = '';
+}
+
+function showStatus(text, options = {}) {
+  const { allowRetry = false, onRetry = null } = options;
   loadingMsg.style.display = 'block';
   loadingMsg.innerHTML = '';
+
   const p = document.createElement('div');
   p.textContent = text;
   loadingMsg.appendChild(p);
 
   if (allowRetry) {
-    const btn = document.createElement('button');
-    btn.type = 'button';
-    btn.className = 'retry-btn';
-    btn.textContent = 'Voltar';
-    btn.addEventListener('click', () => {
-      loadingMsg.style.display = 'none';
-      gameContainer.style.display = 'none';
-      headerBar.style.display = '';
-      gameCard.style.display = '';
-    });
-    loadingMsg.appendChild(btn);
+    const actions = document.createElement('div');
+    actions.className = 'actions';
+
+    if (typeof onRetry === 'function') {
+      const retryBtn = document.createElement('button');
+      retryBtn.type = 'button';
+      retryBtn.className = 'retry-btn primary';
+      retryBtn.textContent = 'Tentar novamente';
+      retryBtn.addEventListener('click', onRetry);
+      actions.appendChild(retryBtn);
+    }
+
+    const backBtn = document.createElement('button');
+    backBtn.type = 'button';
+    backBtn.className = 'retry-btn';
+    backBtn.textContent = 'Voltar';
+    backBtn.addEventListener('click', returnToCard);
+    actions.appendChild(backBtn);
+
+    loadingMsg.appendChild(actions);
   }
 }
 
@@ -137,16 +166,76 @@ async function verifyRomExists(url) {
   }
 }
 
-backToCardBtn.addEventListener('click', () => {
-  gameContainer.style.display = 'none';
-  headerBar.style.display = '';
-  gameCard.style.display = '';
-});
+function resetGameSurface() {
+  gameEl.innerHTML = '';
+  const oldScript = document.getElementById('ejs-loader-script');
+  if (oldScript) oldScript.remove();
+}
 
-playBtn.addEventListener('click', async () => {
+function loadEmulatorFromCdn(cdnIndex, core, encodedRomUrl) {
+  if (cdnIndex >= EJS_CDN_LIST.length) {
+    isLaunching = false;
+    showStatus('Falha ao baixar o núcleo do emulador nas CDNs disponíveis. Verifique sua rede ou extensões de bloqueio.', {
+      allowRetry: true,
+      onRetry: () => {
+        currentCdnIndex = 0;
+        launchEmulator(true);
+      }
+    });
+    return;
+  }
+
+  currentCdnIndex = cdnIndex;
+  const cdnBase = EJS_CDN_LIST[cdnIndex];
+  resetGameSurface();
+
+  window.EJS_player = '#game';
+  window.EJS_core = core;
+  window.EJS_gameName = 'OutRun';
+  window.EJS_color = '#d52b24';
+  window.EJS_startOnLoaded = true;
+  window.EJS_pathtodata = cdnBase;
+  window.EJS_gameUrl = encodedRomUrl;
+  window.EJS_controlScheme = core;
+  window.EJS_language = 'pt-BR';
+
+  let settled = false;
+  const fallbackTimer = setTimeout(() => {
+    if (settled) return;
+    settled = true;
+    showStatus(`Demora ou falha na CDN (${cdnIndex + 1}/${EJS_CDN_LIST.length}). Tentando alternativa...`, false);
+    loadEmulatorFromCdn(cdnIndex + 1, core, encodedRomUrl);
+  }, 15000);
+
+  const script = document.createElement('script');
+  script.id = 'ejs-loader-script';
+  script.src = `${cdnBase}loader.js`;
+  script.async = true;
+
+  script.onload = () => {
+    if (settled) return;
+    settled = true;
+    clearTimeout(fallbackTimer);
+    emulatorStarted = true;
+    isLaunching = false;
+    loadingMsg.style.display = 'none';
+  };
+
+  script.onerror = () => {
+    if (settled) return;
+    settled = true;
+    clearTimeout(fallbackTimer);
+    showStatus(`Falha ao carregar emulador na CDN (${cdnIndex + 1}/${EJS_CDN_LIST.length}). Tentando próxima...`, false);
+    loadEmulatorFromCdn(cdnIndex + 1, core, encodedRomUrl);
+  };
+
+  document.body.appendChild(script);
+}
+
+async function launchEmulator(forceRestart = false) {
   if (isLaunching) return;
 
-  if (emulatorStarted) {
+  if (emulatorStarted && !forceRestart) {
     headerBar.style.display = 'none';
     gameCard.style.display = 'none';
     gameContainer.style.display = 'block';
@@ -162,35 +251,16 @@ playBtn.addEventListener('click', async () => {
   const romAvailable = await verifyRomExists(ROM_FILE);
   if (!romAvailable) {
     isLaunching = false;
-    showStatus(`Não foi possível encontrar a ROM (${ROM_FILE}) na mesma pasta do HTML.`, true);
+    showStatus(`Não foi possível encontrar a ROM (${ROM_FILE}) na mesma pasta do HTML.`, { allowRetry: true });
     return;
   }
 
   const core = detectCoreFromRom(ROM_FILE);
-  window.EJS_player = '#game';
-  window.EJS_core = core;
-  window.EJS_gameName = 'OutRun';
-  window.EJS_color = '#d52b24';
-  window.EJS_startOnLoaded = true;
-  window.EJS_pathtodata = 'https://cdn.emulatorjs.org/stable/data/';
-  window.EJS_gameUrl = encodeURI(ROM_FILE);
-  window.EJS_controlScheme = core;
-  window.EJS_language = 'pt-BR';
+  loadEmulatorFromCdn(currentCdnIndex, core, encodeURI(ROM_FILE));
+}
 
-  const script = document.createElement('script');
-  script.src = 'https://cdn.emulatorjs.org/stable/data/loader.js';
-  script.async = true;
-  script.onload = () => {
-    emulatorStarted = true;
-    isLaunching = false;
-    loadingMsg.style.display = 'none';
-  };
-  script.onerror = () => {
-    isLaunching = false;
-    showStatus('Não foi possível carregar o EmulatorJS. Verifique sua conexão e tente novamente.', true);
-  };
-  document.body.appendChild(script);
-});
+backToCardBtn.addEventListener('click', returnToCard);
+playBtn.addEventListener('click', () => launchEmulator(false));
 </script>
 </body>
 </html>
