@@ -1,430 +1,994 @@
 <!DOCTYPE html>
-<html lang="pt">
+<html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>OutRun - Kubo Touch</title>
-    <style>
-        * { box-sizing: border-box; }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>OutRun MD — Single File Arcade</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      user-select: none;
+      -webkit-user-select: none;
+    }
 
-        html, body {
-            margin: 0;
-            padding: 0;
-            width: 100%;
-            min-height: 100%;
-            background-color: #121212;
-            color: #fff;
-            font-family: Arial, sans-serif;
-        }
-        body { overflow-x: hidden; overflow-y: auto; }
-        body.playing { overflow: hidden; }
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      background: #090b14;
+      color: #fff;
+      font-family: "Courier New", Courier, monospace;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
 
-        header {
-            position: sticky;
-            top: 0;
-            width: 100%;
-            text-align: center;
-            padding: 15px;
-            background: #1e1e1e;
-            z-index: 5;
-        }
+    #game-wrap {
+      position: relative;
+      width: 100vw;
+      max-width: 960px;
+      aspect-ratio: 4 / 3;
+      max-height: 82vh;
+      border: 3px solid #2b3556;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 0 40px rgba(0, 212, 255, 0.18), 0 16px 40px rgba(0, 0, 0, 0.8);
+      background: #12182b;
+    }
 
-        .badge {
-            background: #333333;
-            color: #fff;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-weight: bold;
-            font-size: 14px;
-            border: 1px solid #555;
-        }
+    canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+      image-rendering: pixelated;
+    }
 
-        #game-card {
-            width: calc(100% - 40px);
-            max-width: 440px;
-            margin: 24px auto;
-            background: #1e1e1e;
-            border-radius: 12px;
-            overflow: hidden;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.7);
-        }
+    .hud {
+      position: absolute;
+      top: 10px;
+      left: 12px;
+      right: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      pointer-events: none;
+      z-index: 4;
+      text-shadow: 2px 2px 0 #000, -1px -1px 0 #000;
+      font-weight: bold;
+    }
 
-        /* ---------- CAIXA 3D DO MEGA DRIVE / GENESIS ---------- */
-        .scene {
-            position: relative;
-            width: 100%;
-            height: 360px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            perspective: 1100px;
-            cursor: grab;
-            user-select: none;
-            -webkit-user-select: none;
-            touch-action: pan-y;
-            background: radial-gradient(ellipse at 50% 85%, #3a1d1d 0%, #1e1e1e 72%);
-        }
-        .scene.grabbing { cursor: grabbing; }
+    .hud-box {
+      background: rgba(8, 12, 24, 0.65);
+      border: 2px solid rgba(255, 255, 255, 0.25);
+      border-radius: 6px;
+      padding: 6px 10px;
+      line-height: 1.3;
+    }
 
-        .case {
-            --w: 185px;
-            --h: 260px;
-            --d: 36px;
-            position: relative;
-            width: var(--w);
-            height: var(--h);
-            transform-style: preserve-3d;
-            will-change: transform;
-        }
+    .hud-label {
+      font-size: 10px;
+      color: #8fd3ff;
+      letter-spacing: 1px;
+    }
 
-        .face {
-            position: absolute;
-            top: 0;
-            left: 0;
-            backface-visibility: hidden;
-            -webkit-backface-visibility: hidden;
-            background: #141414;
-            border: 1px solid #0a0a0a;
-        }
+    .hud-val {
+      font-size: 18px;
+      color: #ffe64d;
+    }
 
-        /* Frente (Capa) */
-        .face-front {
-            --shine: 50%;
-            width: var(--w);
-            height: var(--h);
-            transform: translateZ(calc(var(--d) / 2));
-            overflow: hidden;
-            border-radius: 2px 4px 4px 2px;
-            box-shadow: inset 0 0 0 1px rgba(255,255,255,0.12);
-        }
-        .face-front img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            display: block;
-            -webkit-user-drag: none;
-        }
-        .face-front::after {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background: linear-gradient(
-                115deg,
-                transparent calc(var(--shine) - 22%),
-                rgba(255,255,255,0.28) var(--shine),
-                transparent calc(var(--shine) + 22%)
-            );
-            pointer-events: none;
-        }
+    .hud-time.low {
+      color: #ff4d6d;
+      animation: blink 0.4s infinite alternate;
+    }
 
-        /* Verso da Caixa */
-        .face-back {
-            width: var(--w);
-            height: var(--h);
-            transform: rotateY(180deg) translateZ(calc(var(--d) / 2));
-            background: linear-gradient(180deg, #b81d24 0%, #b81d24 14%, #181818 14%, #111 100%);
-            border-radius: 4px 2px 2px 4px;
-            padding: 10px;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            color: #ccc;
-            font-size: 9px;
-            text-align: center;
-        }
-        .back-header {
-            font-weight: 900;
-            letter-spacing: 2px;
-            color: #fff;
-            font-size: 11px;
-            padding-top: 2px;
-        }
-        .back-art {
-            border: 1px solid #444;
-            background: #222;
-            padding: 8px 6px;
-            border-radius: 4px;
-            line-height: 1.35;
-        }
-        .back-art strong {
-            display: block;
-            color: #ffd700;
-            font-size: 11px;
-            margin-bottom: 4px;
-        }
-        .back-footer {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-top: 1px solid #333;
-            padding-top: 6px;
-            font-size: 8px;
-            color: #888;
-        }
-        .sega-mini {
-            font-weight: 900;
-            letter-spacing: 1px;
-            color: #e74c3c;
-            font-size: 11px;
-        }
+    @keyframes blink {
+      from { opacity: 1; }
+      to { opacity: 0.45; }
+    }
 
-        /* Lombada Esquerda */
-        .face-left {
-            width: var(--d);
-            height: var(--h);
-            left: calc((var(--w) - var(--d)) / 2);
-            transform: rotateY(-90deg) translateZ(calc(var(--w) / 2));
-            background: linear-gradient(90deg, #8e151a 0%, #c8232c 25%, #b81d24 85%, #7a1115 100%);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: space-between;
-            padding: 14px 0;
-            border-radius: 3px;
-        }
-        .spine-system {
-            writing-mode: vertical-rl;
-            transform: rotate(180deg);
-            font-weight: 900;
-            font-size: 10px;
-            letter-spacing: 2px;
-            color: #e0e0e0;
-            text-shadow: 1px 1px 0 #000;
-        }
-        .spine-title {
-            writing-mode: vertical-rl;
-            transform: rotate(180deg);
-            font-weight: 900;
-            font-size: 12px;
-            letter-spacing: 1px;
-            color: #ffd700;
-            text-shadow: 1px 1px 0 #000;
-        }
-        .spine-sega {
-            font-weight: 900;
-            font-size: 9px;
-            color: #fff;
-            letter-spacing: 0.5px;
-        }
+    .top-controls {
+      position: absolute;
+      top: 10px;
+      right: 12px;
+      display: flex;
+      gap: 6px;
+      z-index: 6;
+    }
 
-        /* Lateral Direita */
-        .face-right {
-            width: var(--d);
-            height: var(--h);
-            left: calc((var(--w) - var(--d)) / 2);
-            transform: rotateY(90deg) translateZ(calc(var(--w) / 2));
-            background: linear-gradient(90deg, #1b1b1b 0%, #0d0d0d 45%, #262626 50%, #0d0d0d 55%, #1b1b1b 100%);
-        }
+    .mini-btn {
+      background: rgba(12, 18, 36, 0.85);
+      color: #fff;
+      border: 1px solid #5973b8;
+      border-radius: 5px;
+      padding: 5px 9px;
+      font-family: inherit;
+      font-size: 11px;
+      font-weight: bold;
+      cursor: pointer;
+    }
 
-        /* Topo e Base da Caixa */
-        .face-top {
-            width: var(--w);
-            height: var(--d);
-            top: calc((var(--h) - var(--d)) / 2);
-            transform: rotateX(90deg) translateZ(calc(var(--h) / 2));
-            background: linear-gradient(180deg, #1c1c1c, #111);
-        }
-        .face-bottom {
-            width: var(--w);
-            height: var(--d);
-            top: calc((var(--h) - var(--d)) / 2);
-            transform: rotateX(-90deg) translateZ(calc(var(--h) / 2));
-            background: linear-gradient(180deg, #111, #1c1c1c);
-        }
+    .mini-btn:hover {
+      background: #1e2d59;
+    }
 
-        .content {
-            padding: 20px;
-        }
+    .overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(6, 9, 20, 0.84);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 20px;
+      z-index: 8;
+    }
 
-        h1 {
-            margin: 0 0 10px 0;
-            font-size: 22px;
-            color: #e5e5e5;
-        }
+    .overlay.hidden {
+      display: none;
+    }
 
-        .meta-info {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            margin-bottom: 15px;
-            font-size: 13px;
-            color: #aaa;
-        }
+    .title {
+      font-size: clamp(28px, 6vw, 56px);
+      font-weight: 900;
+      font-style: italic;
+      letter-spacing: 3px;
+      color: #ff2a6d;
+      text-shadow: 0 0 18px rgba(255, 42, 109, 0.7), 4px 4px 0 #ffe64d;
+      margin: 0 0 6px;
+    }
 
-        .description {
-            font-size: 14px;
-            line-height: 1.5;
-            color: #ddd;
-            margin-bottom: 20px;
-        }
+    .subtitle {
+      font-size: clamp(11px, 2vw, 15px);
+      color: #05d9e8;
+      margin: 0 0 18px;
+      letter-spacing: 2px;
+    }
 
-        .btn-play {
-            display: block;
-            width: 100%;
-            padding: 16px;
-            background: #b81d24;
-            color: #fff;
-            border: 1px solid #e03a42;
-            border-radius: 8px;
-            font-weight: bold;
-            font-size: 18px;
-            cursor: pointer;
-            text-align: center;
-        }
-        .btn-play:hover { background: #cf232b; }
+    .track-select {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: center;
+      margin-bottom: 18px;
+    }
 
-        #game-container {
-            display: none;
-            position: fixed;
-            inset: 0;
-            width: 100vw;
-            height: 100dvh;
-            z-index: 99999;
-            background: #000;
-        }
+    .track-chip {
+      padding: 7px 12px;
+      border-radius: 6px;
+      border: 2px solid #455b96;
+      background: #131b33;
+      color: #d8e5ff;
+      font-family: inherit;
+      font-size: 12px;
+      font-weight: bold;
+      cursor: pointer;
+    }
 
-        #game {
-            width: 100%;
-            height: 100%;
-        }
+    .track-chip.active {
+      border-color: #ffe64d;
+      background: #283663;
+      color: #ffe64d;
+    }
 
-        /* Layout mobile: ecrã no topo e comando embaixo */
-        @media screen and (max-width: 768px) and (orientation: portrait) {
-            #game {
-                width: 100vw !important;
-                height: 100dvh !important;
-            }
+    .start-btn {
+      padding: 12px 28px;
+      font-family: inherit;
+      font-size: 17px;
+      font-weight: 900;
+      letter-spacing: 2px;
+      color: #090b14;
+      background: linear-gradient(180deg, #ffe64d, #ff9f1c);
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      box-shadow: 0 4px 0 #b85d00;
+    }
 
-            #game canvas {
-                max-height: 44dvh !important;
-                object-fit: contain !important;
-            }
-        }
-    </style>
+    .start-btn:active {
+      transform: translateY(2px);
+      box-shadow: 0 2px 0 #b85d00;
+    }
+
+    .help {
+      margin-top: 14px;
+      font-size: 12px;
+      color: #b8c7e8;
+      max-width: 560px;
+      line-height: 1.5;
+    }
+
+    .touch-pad {
+      display: none;
+      width: 100%;
+      max-width: 960px;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 14px 4px;
+      gap: 12px;
+    }
+
+    .touch-group {
+      display: flex;
+      gap: 10px;
+    }
+
+    .t-btn {
+      width: 64px;
+      height: 54px;
+      border-radius: 10px;
+      border: 2px solid #4962a6;
+      background: rgba(24, 35, 66, 0.9);
+      color: #fff;
+      font-family: inherit;
+      font-size: 20px;
+      font-weight: bold;
+      touch-action: none;
+    }
+
+    .t-btn.gas {
+      width: 84px;
+      background: rgba(22, 96, 62, 0.92);
+      border-color: #36e092;
+    }
+
+    @media (pointer: coarse), (max-width: 720px) {
+      .touch-pad {
+        display: flex;
+      }
+      #game-wrap {
+        max-height: 70vh;
+      }
+    }
+  </style>
 </head>
 <body>
-
-    <header id="header-bar">
-        <span class="badge">KUBO TOUCH • MEGA DRIVE</span>
-    </header>
-
-    <div id="game-card">
-        <div class="scene" id="scene">
-            <div class="case" id="case3d">
-                <div class="face face-front" id="frontFace">
-                    <img src="./out%20run%20mega%20drive.png" alt="Capa OutRun Mega Drive">
-                </div>
-                <div class="face face-back">
-                    <div class="back-header">MEGA DRIVE</div>
-                    <div class="back-art">
-                        <strong>OUTRUN</strong>
-                        Acelera pela estrada com o Ferrari descapotável e escolhe o teu destino antes que o tempo acabe!
-                    </div>
-                    <div class="back-footer">
-                        <span class="sega-mini">SEGA</span>
-                        <span>16-BIT</span>
-                    </div>
-                </div>
-                <div class="face face-left">
-                    <span class="spine-system">MEGA DRIVE</span>
-                    <span class="spine-title">OUTRUN</span>
-                    <span class="spine-sega">SEGA</span>
-                </div>
-                <div class="face face-right"></div>
-                <div class="face face-top"></div>
-                <div class="face face-bottom"></div>
-            </div>
-        </div>
-
-        <div class="content">
-            <h1>OutRun</h1>
-            <div class="meta-info">
-                <span>🎮 1 Jogador</span>
-                <span>🕹️ OutRun</span>
-                <span>🏎️ Corrida</span>
-            </div>
-            <p class="description">
-                Clássico de corrida arcade da Sega. Escolhe a tua banda sonora e enfrenta rotas com curvas e trânsito a alta velocidade.
-            </p>
-            <button id="play-btn" class="btn-play" type="button">JOGAR AGORA</button>
-        </div>
+  <div id="game-wrap">
+    <div class="hud" id="hud">
+      <div class="hud-box">
+        <div class="hud-label">SCORE</div>
+        <div class="hud-val" id="scoreEl">000000</div>
+      </div>
+      <div class="hud-box">
+        <div class="hud-label">TIME</div>
+        <div class="hud-val hud-time" id="timeEl">60.0</div>
+      </div>
+      <div class="hud-box">
+        <div class="hud-label">STAGE / KM/H</div>
+        <div class="hud-val" id="speedEl">S1 • 000</div>
+      </div>
     </div>
 
-    <div id="game-container">
-        <div id="game"></div>
+    <div class="top-controls" style="top: 68px;">
+      <button class="mini-btn" id="bgmBtn">BGM: ON</button>
+      <button class="mini-btn" id="pauseBtn">PAUSE</button>
     </div>
 
-    <script>
-        /* Rotação interativa da caixa 3D */
-        const scene = document.getElementById('scene');
-        const caseEl = document.getElementById('case3d');
-        const frontFace = document.getElementById('frontFace');
+    <canvas id="c" width="640" height="480"></canvas>
 
-        let rotX = -10;
-        let rotY = -22;
-        let isDragging = false;
-        let startX = 0;
-        let startY = 0;
+    <div class="overlay" id="overlay">
+      <h1 class="title">OUTRUN MD</h1>
+      <div class="subtitle">16-BIT ARCADE ROADSTER TRIBUTE</div>
 
-        function updateCaseTransform() {
-            caseEl.style.transform = `rotateX(${rotX}deg) rotateY(${rotY}deg)`;
-            const shinePos = Math.max(10, Math.min(90, 50 + rotY * 1.1));
-            frontFace.style.setProperty('--shine', `${shinePos}%`);
+      <div class="track-select" id="trackSelect">
+        <button class="track-chip active" data-theme="0">COASTAL SUNSET</button>
+        <button class="track-chip" data-theme="1">CANYON DUSK</button>
+        <button class="track-chip" data-theme="2">ALPINE PASS</button>
+      </div>
+
+      <button class="start-btn" id="startBtn">PUSH START</button>
+
+      <div class="help">
+        <b>Teclado:</b> ↑ Acelerar • ↓ Frear • ← / → Esterçar • P Pausar • M Som<br />
+        Passe pelos <b>Checkpoints</b> antes do tempo acabar e desvie dos carros na pista!
+      </div>
+    </div>
+  </div>
+
+  <div class="touch-pad">
+    <div class="touch-group">
+      <button class="t-btn" id="btnLeft">◀</button>
+      <button class="t-btn" id="btnRight">▶</button>
+    </div>
+    <div class="touch-group">
+      <button class="t-btn" id="btnBrake">BRK</button>
+      <button class="t-btn gas" id="btnGas">GAS</button>
+    </div>
+  </div>
+
+  <script>
+    (() => {
+      const canvas = document.getElementById("c");
+      const ctx = canvas.getContext("2d");
+      const W = canvas.width;
+      const H = canvas.height;
+
+      const scoreEl = document.getElementById("scoreEl");
+      const timeEl = document.getElementById("timeEl");
+      const speedEl = document.getElementById("speedEl");
+      const overlay = document.getElementById("overlay");
+      const startBtn = document.getElementById("startBtn");
+      const bgmBtn = document.getElementById("bgmBtn");
+      const pauseBtn = document.getElementById("pauseBtn");
+
+      // --- Áudio Sintetizado (Estilo FM / Synth Arcade) ---
+      const sound = (() => {
+        let actx = null;
+        let muted = false;
+        let step = 0;
+        let timer = null;
+
+        const bassLine = [
+          110, 110, 146.83, 146.83, 164.81, 164.81, 146.83, 130.81,
+          110, 110, 146.83, 164.81, 196.00, 164.81, 146.83, 123.47
+        ];
+        const leadLine = [
+          440, 0, 523.25, 659.25, 587.33, 523.25, 493.88, 0,
+          440, 659.25, 783.99, 659.25, 587.33, 0, 523.25, 493.88
+        ];
+
+        function ensureCtx() {
+          if (!actx) {
+            const AudioCtx = window.AudioContext || window.webkitAudioContext;
+            if (AudioCtx) actx = new AudioCtx();
+          }
+          if (actx && actx.state === "suspended") {
+            actx.resume().catch(() => {});
+          }
         }
-        updateCaseTransform();
 
-        scene.addEventListener('pointerdown', (e) => {
-            isDragging = true;
-            startX = e.clientX;
-            startY = e.clientY;
-            scene.classList.add('grabbing');
-            scene.setPointerCapture(e.pointerId);
-        });
-
-        scene.addEventListener('pointermove', (e) => {
-            if (!isDragging) return;
-            const dx = e.clientX - startX;
-            const dy = e.clientY - startY;
-            startX = e.clientX;
-            startY = e.clientY;
-
-            rotY += dx * 0.45;
-            rotX = Math.max(-45, Math.min(45, rotX - dy * 0.35));
-            updateCaseTransform();
-        });
-
-        function stopDragging() {
-            if (!isDragging) return;
-            isDragging = false;
-            scene.classList.remove('grabbing');
+        function playTone(freq, type, duration, gainVal, slideTo = null) {
+          if (muted || !actx || freq <= 0) return;
+          const now = actx.currentTime;
+          const osc = actx.createOscillator();
+          const gain = actx.createGain();
+          osc.type = type;
+          osc.frequency.setValueAtTime(freq, now);
+          if (slideTo) {
+            osc.frequency.exponentialRampToValueAtTime(slideTo, now + duration);
+          }
+          gain.gain.setValueAtTime(0.0001, now);
+          gain.gain.linearRampToValueAtTime(gainVal, now + 0.01);
+          gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+          osc.connect(gain);
+          gain.connect(actx.destination);
+          osc.start(now);
+          osc.stop(now + duration + 0.02);
         }
-        scene.addEventListener('pointerup', stopDragging);
-        scene.addEventListener('pointercancel', stopDragging);
 
-        /* Configuração do EmulatorJS */
-        // No repositório está 'Out-Run.sms' (quando enviar uma ROM .md/.bin de Mega Drive, troque ROM_FILE e use 'segaMD')
-        const ROM_FILE = './Out-Run.sms';
-        const CORE_NAME = ROM_FILE.toLowerCase().endsWith('.sms') ? 'segaMS' : 'segaMD';
+        function startBgm() {
+          ensureCtx();
+          if (timer) clearInterval(timer);
+          timer = setInterval(() => {
+            if (muted || state.mode !== "playing" || state.paused) return;
+            const bFreq = bassLine[step % bassLine.length];
+            const lFreq = leadLine[step % leadLine.length];
+            playTone(bFreq, "sawtooth", 0.14, 0.035);
+            if (lFreq) playTone(lFreq, "square", 0.12, 0.02);
+            step++;
+          }, 165);
+        }
 
-        document.getElementById('play-btn').addEventListener('click', () => {
-            document.body.classList.add('playing');
-            document.getElementById('header-bar').style.display = 'none';
-            document.getElementById('game-card').style.display = 'none';
-            document.getElementById('game-container').style.display = 'block';
+        function stopBgm() {
+          if (timer) {
+            clearInterval(timer);
+            timer = null;
+          }
+        }
 
-            window.EJS_player = '#game';
-            window.EJS_core = CORE_NAME;
-            window.EJS_gameName = 'OutRun';
-            window.EJS_gameUrl = encodeURI(ROM_FILE);
-            window.EJS_pathtodata = 'https://cdn.emulatorjs.org/stable/data/';
-            window.EJS_startOnLoaded = true;
-            window.EJS_fullscreenOnLoaded = false;
+        return {
+          init: ensureCtx,
+          startBgm,
+          stopBgm,
+          toggleMute() {
+            muted = !muted;
+            bgmBtn.textContent = muted ? "BGM: OFF" : "BGM: ON";
+            if (!muted) {
+              ensureCtx();
+              startBgm();
+            }
+          },
+          crash() {
+            ensureCtx();
+            playTone(135, "sawtooth", 0.28, 0.12, 38);
+            playTone(82, "square", 0.32, 0.09, 28);
+          },
+          checkpoint() {
+            ensureCtx();
+            playTone(587.33, "square", 0.11, 0.06);
+            setTimeout(() => playTone(880, "square", 0.18, 0.07), 90);
+          }
+        };
+      })();
 
-            const script = document.createElement('script');
-            script.src = 'https://cdn.emulatorjs.org/stable/data/loader.js';
-            script.async = true;
-            document.body.appendChild(script);
+      // --- Temas Visuais ---
+      const themes = [
+        {
+          name: "COASTAL SUNSET",
+          skyTop: "#141d4a",
+          skyMid: "#6b2d6c",
+          skyBot: "#ff7b54",
+          sun: "#ffe66d",
+          mountain: "#2c1e4a",
+          grassLight: "#2ea84f",
+          grassDark: "#248c40",
+          rumbleLight: "#ffffff",
+          rumbleDark: "#d92638",
+          roadLight: "#3b4254",
+          roadDark: "#323847",
+          lane: "#f7f7f7"
+        },
+        {
+          name: "CANYON DUSK",
+          skyTop: "#1b1438",
+          skyMid: "#9c3d54",
+          skyBot: "#f4a261",
+          sun: "#ffd166",
+          mountain: "#5c2738",
+          grassLight: "#c97a3d",
+          grassDark: "#ad642e",
+          rumbleLight: "#fff3b0",
+          rumbleDark: "#9e2a2b",
+          roadLight: "#433d4a",
+          roadDark: "#38333e",
+          lane: "#ffe66d"
+        },
+        {
+          name: "ALPINE PASS",
+          skyTop: "#0f2957",
+          skyMid: "#2a6f97",
+          skyBot: "#a9d6e5",
+          sun: "#ffffff",
+          mountain: "#274c77",
+          grassLight: "#3fa34d",
+          grassDark: "#2d8239",
+          rumbleLight: "#ffffff",
+          rumbleDark: "#e63946",
+          roadLight: "#39414d",
+          roadDark: "#2e3540",
+          lane: "#f1faee"
+        }
+      ];
+
+      // --- Parâmetros do Pseudo-3D ---
+      const SEG_LENGTH = 200;
+      const VISIBLE_SEGS = 95;
+      const ROAD_WIDTH = 2200;
+      const CAM_HEIGHT = 1150;
+      const CAM_DEPTH = 0.84;
+      const CHECKPOINT_INTERVAL = 180; // segmentos por estágio
+
+      let segments = [];
+      let traffic = [];
+      let selectedTheme = 0;
+
+      const state = {
+        mode: "menu", // menu | playing | gameover
+        paused: false,
+        pos: 0,
+        playerX: 0, // -1 a 1 (fora da pista além de ~1.05)
+        speed: 0,
+        maxSpeed: 12500,
+        score: 0,
+        timeLeft: 60,
+        stage: 1,
+        nextCheckpointSeg: CHECKPOINT_INTERVAL,
+        bannerText: "",
+        bannerTimer: 0,
+        shakeTimer: 0,
+        steerVisual: 0
+      };
+
+      const keys = {
+        left: false,
+        right: false,
+        up: false,
+        down: false
+      };
+
+      function buildTrack(totalSegments = 1200) {
+        segments = [];
+        for (let i = 0; i < totalSegments; i++) {
+          let curve = 0;
+          let hill = 0;
+
+          if (i > 60 && i < 220) curve = Math.sin((i - 60) * 0.04) * 2.2;
+          else if (i >= 240 && i < 420) curve = -Math.sin((i - 240) * 0.035) * 2.8;
+          else if (i >= 460 && i < 700) curve = Math.sin((i - 460) * 0.05) * 3.4;
+          else if (i >= 740) curve = Math.cos((i - 740) * 0.04) * 3.0;
+
+          if (i > 90 && i < 260) hill = Math.sin((i - 90) * 0.045) * 900;
+          else if (i >= 320 && i < 560) hill = Math.sin((i - 320) * 0.035) * 1400;
+          else if (i >= 620) hill = Math.cos((i - 620) * 0.04) * 1100;
+
+          const isCheckpoint = i > 0 && i % CHECKPOINT_INTERVAL === 0;
+          const sideProp = (i % 14 === 0) ? (i % 28 === 0 ? "palm" : "sign") : null;
+
+          segments.push({
+            index: i,
+            curve,
+            y: hill,
+            isCheckpoint,
+            sideProp
+          });
+        }
+      }
+
+      function spawnTraffic() {
+        traffic = [];
+        const colors = ["#2ec4b6", "#ffbe0b", "#8338ec", "#3a86ff", "#fb5607"];
+        for (let i = 0; i < 22; i++) {
+          traffic.push({
+            offset: (Math.random() * 1.5 - 0.75),
+            z: (140 + i * 75) * SEG_LENGTH,
+            speed: 3800 + Math.random() * 3400,
+            color: colors[i % colors.length]
+          });
+        }
+      }
+
+      function resetGame() {
+        buildTrack(1600);
+        spawnTraffic();
+        state.pos = 0;
+        state.playerX = 0;
+        state.speed = 0;
+        state.score = 0;
+        state.timeLeft = 60;
+        state.stage = 1;
+        state.nextCheckpointSeg = CHECKPOINT_INTERVAL;
+        state.bannerText = "STAGE 1 — GO!";
+        state.bannerTimer = 1.6;
+        state.shakeTimer = 0;
+        state.paused = false;
+        pauseBtn.textContent = "PAUSE";
+      }
+
+      function project(worldX, worldY, worldZ, camX, camY, camZ) {
+        const dz = Math.max(1, worldZ - camZ);
+        const scale = CAM_DEPTH / dz;
+        const screenX = (1 + scale * (worldX - camX)) * (W / 2);
+        const screenY = (1 - scale * (worldY - camY)) * (H * 0.52);
+        const roadW = scale * ROAD_WIDTH * (W / 2);
+        return { x: screenX, y: screenY, w: roadW, scale, dz };
+      }
+
+      function drawBackground(curveOffset) {
+        const th = themes[selectedTheme];
+        const skyGrad = ctx.createLinearGradient(0, 0, 0, H * 0.54);
+        skyGrad.addColorStop(0, th.skyTop);
+        skyGrad.addColorStop(0.55, th.skyMid);
+        skyGrad.addColorStop(1, th.skyBot);
+        ctx.fillStyle = skyGrad;
+        ctx.fillRect(0, 0, W, H * 0.55);
+
+        // Sol retrô
+        const sunX = W * 0.5 - curveOffset * 80;
+        const sunY = H * 0.34;
+        ctx.fillStyle = th.sun;
+        ctx.beginPath();
+        ctx.arc(sunX, sunY, 46, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Montanhas com paralaxe
+        const mShift = (curveOffset * 160) % W;
+        ctx.fillStyle = th.mountain;
+        for (let rep = -1; rep <= 1; rep++) {
+          const baseX = rep * W - mShift;
+          ctx.beginPath();
+          ctx.moveTo(baseX, H * 0.53);
+          ctx.lineTo(baseX + W * 0.14, H * 0.39);
+          ctx.lineTo(baseX + W * 0.28, H * 0.48);
+          ctx.lineTo(baseX + W * 0.46, H * 0.35);
+          ctx.lineTo(baseX + W * 0.66, H * 0.49);
+          ctx.lineTo(baseX + W * 0.84, H * 0.38);
+          ctx.lineTo(baseX + W, H * 0.53);
+          ctx.closePath();
+          ctx.fill();
+        }
+      }
+
+      function drawQuad(x1, y1, w1, x2, y2, w2, color) {
+        ctx.fillStyle = color;
+        ctx.beginPath();
+        ctx.moveTo(x1 - w1, y1);
+        ctx.lineTo(x1 + w1, y1);
+        ctx.lineTo(x2 + w2, y2);
+        ctx.lineTo(x2 - w2, y2);
+        ctx.closePath();
+        ctx.fill();
+      }
+
+      function drawRoadsideProp(screenX, screenY, scale, type) {
+        const h = scale * 950;
+        const w = scale * 220;
+        if (h < 3 || h > 420) return;
+
+        if (type === "palm") {
+          // Tronco
+          ctx.strokeStyle = "#6e472b";
+          ctx.lineWidth = Math.max(2, w * 0.16);
+          ctx.beginPath();
+          ctx.moveTo(screenX, screenY);
+          ctx.quadraticCurveTo(screenX + w * 0.15, screenY - h * 0.5, screenX + w * 0.08, screenY - h);
+          ctx.stroke();
+
+          // Folhas
+          ctx.fillStyle = "#2ec44d";
+          const topX = screenX + w * 0.08;
+          const topY = screenY - h;
+          for (let a = -2; a <= 2; a++) {
+            ctx.beginPath();
+            ctx.ellipse(topX + a * w * 0.22, topY + Math.abs(a) * h * 0.05, w * 0.28, h * 0.08, a * 0.25, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        } else if (type === "sign") {
+          ctx.fillStyle = "#cfd8dc";
+          ctx.fillRect(screenX - w * 0.05, screenY - h * 0.7, w * 0.1, h * 0.7);
+          ctx.fillStyle = "#ffbe0b";
+          ctx.fillRect(screenX - w * 0.28, screenY - h * 0.85, w * 0.56, h * 0.26);
+          ctx.strokeStyle = "#111";
+          ctx.lineWidth = Math.max(1, scale * 30);
+          ctx.strokeRect(screenX - w * 0.28, screenY - h * 0.85, w * 0.56, h * 0.26);
+        }
+      }
+
+      function drawCarSprite(cx, cy, scale, bodyColor, isPlayer = false) {
+        const w = isPlayer ? scale * 680 : scale * 620;
+        const h = isPlayer ? scale * 330 : scale * 310;
+        if (w < 4 || w > 520) return;
+
+        // Sombra
+        ctx.fillStyle = "rgba(0,0,0,0.45)";
+        ctx.beginPath();
+        ctx.ellipse(cx, cy + h * 0.04, w * 0.56, Math.max(2, h * 0.12), 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Pneus
+        const tireW = w * 0.18;
+        const tireH = h * 0.34;
+        ctx.fillStyle = "#14161f";
+        ctx.fillRect(cx - w * 0.52, cy - tireH * 0.7, tireW, tireH);
+        ctx.fillRect(cx + w * 0.52 - tireW, cy - tireH * 0.7, tireW, tireH);
+
+        // Carroceria inferior
+        ctx.fillStyle = bodyColor;
+        ctx.fillRect(cx - w * 0.45, cy - h * 0.62, w * 0.9, h * 0.42);
+
+        // Cabine / vidro traseiro
+        ctx.fillStyle = "#1b263b";
+        ctx.fillRect(cx - w * 0.32, cy - h * 0.92, w * 0.64, h * 0.32);
+
+        if (isPlayer) {
+          // Detalhe esportivo branco + lanternas vermelhas brilhantes
+          ctx.fillStyle = "#ffffff";
+          ctx.fillRect(cx - w * 0.06, cy - h * 0.62, w * 0.12, h * 0.42);
+
+          ctx.fillStyle = "#ff1e42";
+          ctx.fillRect(cx - w * 0.42, cy - h * 0.52, w * 0.22, h * 0.14);
+          ctx.fillRect(cx + w * 0.20, cy - h * 0.52, w * 0.22, h * 0.14);
+
+          // Escapamento / chama ao acelerar
+          if (keys.up && state.speed > 300) {
+            ctx.fillStyle = Math.random() > 0.5 ? "#ff9f1c" : "#ff2a6d";
+            ctx.beginPath();
+            ctx.arc(cx - w * 0.22, cy - h * 0.25, Math.max(2, w * 0.05), 0, Math.PI * 2);
+            ctx.arc(cx + w * 0.22, cy - h * 0.25, Math.max(2, w * 0.05), 0, Math.PI * 2);
+            ctx.fill();
+          }
+        } else {
+          ctx.fillStyle = "#ff4d6d";
+          ctx.fillRect(cx - w * 0.38, cy - h * 0.50, w * 0.16, h * 0.12);
+          ctx.fillRect(cx + w * 0.22, cy - h * 0.50, w * 0.16, h * 0.12);
+        }
+      }
+
+      function render() {
+        const th = themes[selectedTheme];
+        const baseSegIdx = Math.floor(state.pos / SEG_LENGTH);
+        const segPercent = (state.pos % SEG_LENGTH) / SEG_LENGTH;
+        const baseSeg = segments[baseSegIdx % segments.length];
+        const nextSeg = segments[(baseSegIdx + 1) % segments.length];
+
+        const playerY = baseSeg.y + (nextSeg.y - baseSeg.y) * segPercent;
+        const camX = state.playerX * ROAD_WIDTH * 0.45;
+        const camY = playerY + CAM_HEIGHT;
+        const camZ = state.pos;
+
+        ctx.save();
+        if (state.shakeTimer > 0) {
+          const mag = state.shakeTimer * 18;
+          ctx.translate((Math.random() - 0.5) * mag, (Math.random() - 0.5) * mag);
+        }
+
+        drawBackground(baseSeg.curve);
+
+        // Projeta segmentos de trás para frente
+        let xAccum = 0;
+        let dxAccum = 0;
+        const projected = [];
+
+        for (let n = 0; n < VISIBLE_SEGS; n++) {
+          const segIndex = baseSegIdx + n;
+          const seg = segments[segIndex % segments.length];
+          const worldZ = segIndex * SEG_LENGTH;
+
+          xAccum += dxAccum;
+          dxAccum += seg.curve * 0.45;
+
+          const p = project(xAccum, seg.y, worldZ, camX, camY, camZ);
+          projected.push({ seg, p, worldX: xAccum, worldZ });
+        }
+
+        for (let n = projected.length - 1; n > 0; n--) {
+          const curr = projected[n];
+          const prev = projected[n - 1];
+          if (prev.p.y <= curr.p.y) continue;
+
+          const isAlt = Math.floor(curr.seg.index / 3) % 2 === 0;
+          const grassCol = isAlt ? th.grassLight : th.grassDark;
+          const rumbleCol = isAlt ? th.rumbleLight : th.rumbleDark;
+          const roadCol = isAlt ? th.roadLight : th.roadDark;
+
+          // Grama
+          ctx.fillStyle = grassCol;
+          ctx.fillRect(0, curr.p.y, W, prev.p.y - curr.p.y);
+
+          // Zebrado lateral (rumble strip)
+          drawQuad(
+            prev.p.x, prev.p.y, prev.p.w * 1.14,
+            curr.p.x, curr.p.y, curr.p.w * 1.14,
+            rumbleCol
+          );
+
+          // Asfalto
+          drawQuad(
+            prev.p.x, prev.p.y, prev.p.w,
+            curr.p.x, curr.p.y, curr.p.w,
+            roadCol
+          );
+
+          // Faixa central tracejada
+          if (isAlt) {
+            drawQuad(
+              prev.p.x, prev.p.y, prev.p.w * 0.03,
+              curr.p.x, curr.p.y, curr.p.w * 0.03,
+              th.lane
+            );
+          }
+
+          // Pórtico de checkpoint
+          if (curr.seg.isCheckpoint) {
+            const archH = curr.p.scale * 1350;
+            ctx.fillStyle = "#ffe64d";
+            ctx.fillRect(curr.p.x - curr.p.w * 1.12, curr.p.y - archH, Math.max(3, curr.p.w * 0.08), archH);
+            ctx.fillRect(curr.p.x + curr.p.w * 1.04, curr.p.y - archH, Math.max(3, curr.p.w * 0.08), archH);
+            ctx.fillStyle = "#ff2a6d";
+            ctx.fillRect(curr.p.x - curr.p.w * 1.12, curr.p.y - archH, curr.p.w * 2.24, Math.max(4, archH * 0.14));
+          }
+
+          // Objetos na lateral
+          if (curr.seg.sideProp) {
+            drawRoadsideProp(
+              curr.p.x - curr.p.w * 1.35,
+              curr.p.y,
+              curr.p.scale,
+              curr.seg.sideProp
+            );
+            drawRoadsideProp(
+              curr.p.x + curr.p.w * 1.35,
+              curr.p.y,
+              curr.p.scale,
+              curr.seg.sideProp
+            );
+          }
+        }
+
+        // Carros rivais
+        for (const car of traffic) {
+          const dz = car.z - state.pos;
+          if (dz > 120 && dz < VISIBLE_SEGS * SEG_LENGTH) {
+            const segIdx = Math.floor(car.z / SEG_LENGTH);
+            const seg = segments[segIdx % segments.length];
+            // Aproxima curva acumulada para alinhamento visual
+            const relSeg = Math.max(0, Math.min(projected.length - 1, segIdx - baseSegIdx));
+            const ref = projected[relSeg];
+            const carWorldX = ref.worldX + car.offset * (ROAD_WIDTH * 0.45);
+            const p = project(carWorldX, seg.y, car.z, camX, camY, camZ);
+            drawCarSprite(p.x, p.y, p.scale, car.color, false);
+          }
+        }
+
+        // Carro do jogador (base fixa na tela com leve reação de direção)
+        const playerScreenX = W * 0.5 + state.steerVisual * 26;
+        const playerScreenY = H * 0.86;
+        drawCarSprite(playerScreenX, playerScreenY, 0.34, "#ff2a6d", true);
+
+        // Mensagem de estágio / checkpoint
+        if (state.bannerTimer > 0 && state.bannerText) {
+          ctx.save();
+          ctx.font = "900 32px 'Courier New', monospace";
+          ctx.textAlign = "center";
+          ctx.fillStyle = "#ffe64d";
+          ctx.strokeStyle = "#000";
+          ctx.lineWidth = 5;
+          ctx.strokeText(state.bannerText, W / 2, H * 0.25);
+          ctx.fillText(state.bannerText, W / 2, H * 0.25);
+          ctx.restore();
+        }
+
+        ctx.restore();
+      }
+
+      function update(dt) {
+        if (state.mode !== "playing" || state.paused) return;
+
+        state.timeLeft -= dt;
+        if (state.bannerTimer > 0) state.bannerTimer -= dt;
+        if (state.shakeTimer > 0) state.shakeTimer -= dt;
+
+        // Aceleração e frenagem
+        const offRoad = Math.abs(state.playerX) > 1.02;
+        const effectiveMax = offRoad ? state.maxSpeed * 0.58 : state.maxSpeed;
+
+        if (keys.up) {
+          state.speed += 7400 * dt;
+        } else if (keys.down) {
+          state.speed -= 9800 * dt;
+        } else {
+          state.speed -= 2600 * dt;
+        }
+
+        if (offRoad && state.speed > effectiveMax) {
+          state.speed -= 6500 * dt;
+          state.shakeTimer = Math.max(state.shakeTimer, 0.08);
+        }
+
+        state.speed = Math.max(0, Math.min(effectiveMax, state.speed));
+
+        // Direção
+        let steerDir = 0;
+        if (keys.left) steerDir -= 1;
+        if (keys.right) steerDir += 1;
+
+        const speedFactor = Math.min(1, state.speed / 3500);
+        state.playerX += steerDir * 1.95 * speedFactor * dt;
+        state.playerX = Math.max(-1.45, Math.min(1.45, state.playerX));
+        state.steerVisual += (steerDir - state.steerVisual) * Math.min(1, dt * 14);
+
+        // Avanço na pista e pontuação
+        const prevPos = state.pos;
+        state.pos += state.speed * dt;
+        const deltaDist = Math.max(0, state.pos - prevPos);
+        state.score += Math.floor(deltaDist * 0.045);
+
+        // Checkpoints
+        const currentSeg = Math.floor(state.pos / SEG_LENGTH);
+        if (currentSeg >= state.nextCheckpointSeg) {
+          state.stage += 1;
+          state.nextCheckpointSeg += CHECKPOINT_INTERVAL;
+          state.timeLeft = Math.min(99, state.timeLeft + 22);
+          state.score += 1500 * state.stage;
+          state.bannerText = `CHECKPOINT! STAGE ${state.stage}`;
+          state.bannerTimer = 1.8;
+          sound.checkpoint();
+        }
+
+        // Tráfego e colisões
+        for (const car of traffic) {
+          car.z += car.speed * dt;
+          if (car.z < state.pos - SEG_LENGTH * 8) {
+            car.z = state.pos + SEG_LENGTH * (65 + Math.random() * 35);
+            car.offset = Math.random() * 1.5 - 0.75;
+          }
+
+          const dz = car.z - state.pos;
+          if (Math.abs(dz) < 150) {
+            const dx = Math.abs(car.offset - state.playerX);
+            if (dx < 0.28) {
+              state.speed *= 0.42;
+              state.playerX += (state.playerX >= car.offset ? 0.22 : -0.22);
+              state.shakeTimer = 0.25;
+              sound.crash();
+            }
+          }
+        }
+
+        // Fim de tempo
+        if (state.timeLeft <= 0) {
+          state.timeLeft = 0;
+          state.mode = "gameover";
+          overlay.classList.remove("hidden");
+          overlay.querySelector(".title").textContent = "TIME OVER";
+          overlay.querySelector(".subtitle").textContent =
+            `STAGE ${state.stage} • FINAL SCORE: ${String(state.score).padStart(6, "0")}`;
+          startBtn.textContent = "PLAY AGAIN";
+        }
+
+        // Atualiza HUD
+        scoreEl.textContent = String(state.score).padStart(6, "0");
+        timeEl.textContent = state.timeLeft.toFixed(1);
+        timeEl.classList.toggle("low", state.timeLeft <= 10);
+        const kmh = Math.round((state.speed / state.maxSpeed) * 260);
+        speedEl.textContent = `S${state.stage} • ${String(kmh).padStart(3, "0")}`;
+      }
+
+      let lastTime = performance.now();
+      function loop(now) {
+        const dt = Math.min(0.05, (now - lastTime) / 1000);
+        lastTime = now;
+        update(dt);
+        render();
+        requestAnimationFrame(loop);
+      }
+
+      // --- Eventos ---
+      window.addEventListener("keydown", (e) => {
+        if (e.code === "ArrowLeft" || e.code === "KeyA") keys.left = true;
+        if (e.code === "ArrowRight" || e.code === "KeyD") keys.right = true;
+        if (e.code === "ArrowUp" || e.code === "KeyW") keys.up = true;
+        if (e.code === "ArrowDown" || e.code === "KeyS") keys.down = true;
+        if (e.code === "KeyM") sound.toggleMute();
+        if (e.code === "KeyP" && state.mode === "playing") {
+          state.paused = !state.paused;
+          pauseBtn.textContent = state.paused ? "RESUME" : "PAUSE";
+        }
+      });
+
+      window.addEventListener("keyup", (e) => {
+        if (e.code === "ArrowLeft" || e.code === "KeyA") keys.left = false;
+        if (e.code === "ArrowRight" || e.code === "KeyD") keys.right = false;
+        if (e.code === "ArrowUp" || e.code === "KeyW") keys.up = false;
+        if (e.code === "ArrowDown" || e.code === "KeyS") keys.down = false;
+      });
+
+      function bindTouch(id, prop) {
+        const el = document.getElementById(id);
+        if (!el) return;
+        const on = (ev) => { ev.preventDefault(); keys[prop] = true; };
+        const off = (ev) => { ev.preventDefault(); keys[prop] = false; };
+        el.addEventListener("pointerdown", on);
+        el.addEventListener("pointerup", off);
+        el.addEventListener("pointerleave", off);
+        el.addEventListener("pointercancel", off);
+      }
+
+      bindTouch("btnLeft", "left");
+      bindTouch("btnRight", "right");
+      bindTouch("btnGas", "up");
+      bindTouch("btnBrake", "down");
+
+      document.querySelectorAll(".track-chip").forEach((chip) => {
+        chip.addEventListener("click", () => {
+          document.querySelectorAll(".track-chip").forEach((c) => c.classList.remove("active"));
+          chip.classList.add("active");
+          selectedTheme = Number(chip.dataset.theme) || 0;
         });
-    </script>
+      });
+
+      startBtn.addEventListener("click", () => {
+        sound.init();
+        sound.startBgm();
+        resetGame();
+        state.mode = "playing";
+        overlay.classList.add("hidden");
+      });
+
+      bgmBtn.addEventListener("click", () => sound.toggleMute());
+
+      pauseBtn.addEventListener("click", () => {
+        if (state.mode !== "playing") return;
+        state.paused = !state.paused;
+        pauseBtn.textContent = state.paused ? "RESUME" : "PAUSE";
+      });
+
+      buildTrack(1600);
+      spawnTraffic();
+      requestAnimationFrame(loop);
+    })();
+  </script>
 </body>
 </html>
