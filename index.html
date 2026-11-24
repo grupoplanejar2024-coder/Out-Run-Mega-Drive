@@ -288,7 +288,7 @@
             height: 100%;
         }
 
-        /* Layout mobile igual ao modelo do Sonic 3: tela em cima e controles embaixo sem duplicar */
+        /* Layout mobile no estilo do Sonic 3: ecrã no topo e comando de 6 botões em baixo */
         @media screen and (max-width: 768px) and (orientation: portrait) {
             #game {
                 width: 100vw !important;
@@ -318,11 +318,11 @@
                     <div class="back-header">MEGA DRIVE</div>
                     <div class="back-art">
                         <strong>OUTRUN</strong>
-                        Acelere pela estrada com a Ferrari conversível e escolha o seu destino antes que o tempo acabe!
+                        Acelera pela estrada com o Ferrari descapotável e escolhe o teu destino antes que o tempo acabe!
                     </div>
                     <div class="back-footer">
                         <span class="sega-mini">SEGA</span>
-                        <span>ARCADE</span>
+                        <span>16-BIT</span>
                     </div>
                 </div>
                 <div class="face face-left">
@@ -340,11 +340,11 @@
             <h1>OutRun</h1>
             <div class="meta-info">
                 <span>🎮 1 Jogador</span>
-                <span>🕹️ OutRun</span>
+                <span>🕹️ Mega Drive</span>
                 <span>🏎️ Corrida</span>
             </div>
             <p class="description">
-                Clássico de corrida arcade da Sega. Escolha sua trilha sonora e enfrente rotas com curvas e tráfego em alta velocidade.
+                Clássico de corrida arcade da Sega no Mega Drive. Escolhe a tua banda sonora e enfrenta rotas com curvas e trânsito a alta velocidade.
             </p>
             <button id="play-btn" class="btn-play" type="button">JOGAR AGORA</button>
         </div>
@@ -401,48 +401,28 @@
         scene.addEventListener('pointerup', stopDragging);
         scene.addEventListener('pointercancel', stopDragging);
 
-        /* Configuração do EmulatorJS */
-        // No repositório atual está 'Out-Run.sms' (se enviar uma ROM .md/.bin de Mega Drive, troque ROM_FILE para o arquivo .md/.bin)
-        const ROM_FILE = './Out-Run.sms';
-        const CORE_NAME = ROM_FILE.toLowerCase().endsWith('.sms') ? 'segaMS' : 'segaMD';
-        const CDN_URLS = [
-            'https://cdn.emulatorjs.org/stable/data/',
-            'https://cdn.emulatorjs.org/latest/data/'
-        ];
-
-        function startEmulator(cdnIndex = 0) {
-            const gameDiv = document.getElementById('game');
-            gameDiv.innerHTML = '';
-
-            const oldScript = document.getElementById('ejs-loader');
-            if (oldScript) oldScript.remove();
-
-            window.EJS_player = '#game';
-            window.EJS_core = CORE_NAME;
-            window.EJS_gameName = 'OutRun';
-            window.EJS_gameUrl = encodeURI(ROM_FILE);
-            window.EJS_pathtodata = CDN_URLS[cdnIndex] || CDN_URLS[0];
-            window.EJS_startOnLoaded = true;
-            window.EJS_fullscreenOnLoaded = false;
-
-            const script = document.createElement('script');
-            script.id = 'ejs-loader';
-            script.src = window.EJS_pathtodata + 'loader.js';
-            script.async = true;
-            script.onerror = () => {
-                if (cdnIndex + 1 < CDN_URLS.length) {
-                    startEmulator(cdnIndex + 1);
-                }
-            };
-            document.body.appendChild(script);
-        }
+        /* Configuração do EmulatorJS no padrão Mega Drive */
+        // Certifica-te de ter o ficheiro .md ou .bin de Mega Drive no repositório
+        const ROM_FILE = './OutRun (World).md';
 
         document.getElementById('play-btn').addEventListener('click', () => {
             document.body.classList.add('playing');
             document.getElementById('header-bar').style.display = 'none';
             document.getElementById('game-card').style.display = 'none';
             document.getElementById('game-container').style.display = 'block';
-            startEmulator(0);
+
+            window.EJS_player = '#game';
+            window.EJS_core = 'segaMD';
+            window.EJS_gameName = 'OutRun';
+            window.EJS_gameUrl = encodeURI(ROM_FILE);
+            window.EJS_pathtodata = 'https://cdn.emulatorjs.org/stable/data/';
+            window.EJS_startOnLoaded = true;
+            window.EJS_fullscreenOnLoaded = false;
+
+            const script = document.createElement('script');
+            script.src = 'https://cdn.emulatorjs.org/stable/data/loader.js';
+            script.async = true;
+            document.body.appendChild(script);
         });
     </script>
 </body>
