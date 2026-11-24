@@ -146,14 +146,13 @@
     <p class="subtitle">Kubo Touch — Toque em jogar para iniciar</p>
 
     <div class="cover-box">
-      <!-- Substitua COVER_DATA_URI pela imagem da capa se quiser embuti-la via data URL -->
-      <img id="cover-img" src="./outrun-cover.jpg" alt="Capa do jogo OutRun Sega Mega Drive" onerror="this.style.display='none'" />
+      <img id="cover-img" src="./out%20run%20mega%20drive.png" alt="Capa do jogo OutRun Sega Mega Drive" onerror="this.style.display='none'" />
     </div>
 
     <button class="btn-play" id="start-btn" type="button">▶ Iniciar Jogo</button>
 
     <div class="local-rom">
-      Ou <label for="rom-input" class="local-link">selecione o arquivo da ROM (.md / .bin)</label>
+      Ou <label for="rom-input" class="local-link">selecione o arquivo da ROM (.md / .bin / .gen)</label>
       <input type="file" id="rom-input" accept=".md,.bin,.gen,.smd,.zip" />
     </div>
   </div>
@@ -168,8 +167,20 @@
     const startBtn = document.getElementById("start-btn");
     const romInput = document.getElementById("rom-input");
 
+    // Nome exato do arquivo da ROM no repositório Out-Run-Mega-Drive
+    const REPO_ROM_PATH = "./" + encodeURIComponent("OutRun (USA, Europe).gen");
+
     let customRomUrl = null;
     let started = false;
+
+    // Remove Service Workers antigos que possam estar servindo cache quebrado
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.getRegistrations().then((registrations) => {
+        for (const registration of registrations) {
+          registration.unregister();
+        }
+      });
+    }
 
     romInput.addEventListener("change", (event) => {
       const file = event.target.files?.[0];
@@ -180,9 +191,7 @@
     });
 
     startBtn.addEventListener("click", () => {
-      // Altere o caminho abaixo para o nome real da sua ROM hospedada junto ao HTML
-      const defaultRomUrl = customRomUrl || "./OutRun.md";
-      launchEmulator(defaultRomUrl);
+      launchEmulator(customRomUrl || REPO_ROM_PATH);
     });
 
     function launchEmulator(romUrl) {
