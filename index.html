@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -122,66 +122,6 @@
     </div>
 
     <div id="game-wrapper">
-        <!-- Tela inicial caso a ROM não esteja hospedada diretamente -->
+        <!-- Visível apenas se HOSTED_ROM_URL estiver vazio ou se o carregamento automático falhar -->
         <div id="rom-loader">
-            <div class="car-badge">🏎️🌴</div>
-            <h2>PRONTO PARA ACELERAR</h2>
-            <p>Selecione o arquivo da ROM do <strong>OutRun (.bin / .md / .zip)</strong> para iniciar o jogo.</p>
-            <button class="btn-upload" onclick="document.getElementById('rom-input').click()">
-                CARREGAR ROM
-            </button>
-            <input type="file" id="rom-input" accept=".bin,.md,.gen,.smd,.zip">
-        </div>
-
-        <div id="game"></div>
-    </div>
-
-    <script>
-        // =========================================================================
-        // CONFIGURAÇÃO AUTOMÁTICA (Para uso no GitHub Pages / NFC)
-        // Se você hospedar a ROM na mesma pasta deste HTML, coloque o nome dela
-        // abaixo (ex: "outrun.zip" ou "OutRun.bin") e o jogo iniciará sozinho.
-        // =========================================================================
-        const HOSTED_ROM_URL = ""; 
-
-        function startEmulator(romUrl) {
-            document.getElementById('rom-loader').style.display = 'none';
-
-            window.EJS_player = '#game';
-            window.EJS_core = 'segaMD';
-            window.EJS_gameName = 'OutRun (Mega Drive)';
-            window.EJS_color = '#d31926';
-            window.EJS_startOnLoaded = true;
-            window.EJS_pathtodata = 'https://cdn.emulatorjs.org/stable/data/';
-            window.EJS_gameUrl = romUrl;
-
-            // Controles virtuais otimizados para tela sensível ao toque (Mobile)
-            window.EJS_VirtualGamepadSettings = [
-                { type: "dpad", location: "left", left: "15px", bottom: "25px", size: 120 },
-                { type: "button", text: "A", id: "a", location: "right", right: "135px", bottom: "25px", size: 55 },
-                { type: "button", text: "B", id: "b", location: "right", right: "75px", bottom: "50px", size: 55 },
-                { type: "button", text: "C", id: "c", location: "right", right: "15px", bottom: "75px", size: 55 },
-                { type: "button", text: "START", id: "start", location: "center", bottom: "15px", width: 65, height: 28 }
-            ];
-
-            const script = document.createElement('script');
-            script.src = 'https://cdn.emulatorjs.org/stable/data/loader.js';
-            document.body.appendChild(script);
-        }
-
-        // Inicia automaticamente se houver uma URL configurada
-        if (HOSTED_ROM_URL && HOSTED_ROM_URL.trim() !== "") {
-            startEmulator(HOSTED_ROM_URL);
-        }
-
-        // Carregamento manual via arquivo local (como o arquivo anexado)
-        document.getElementById('rom-input').addEventListener('change', function(event) {
-            const file = event.target.files[0];
-            if (file) {
-                const blobUrl = URL.createObjectURL(file);
-                startEmulator(blobUrl);
-            }
-        });
-    </script>
-</body>
-</html>
+            <div class="car-badge">🏎
