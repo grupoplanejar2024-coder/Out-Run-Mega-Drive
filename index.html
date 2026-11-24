@@ -57,7 +57,7 @@
         .cover-container {
             width: 100%;
             height: 260px;
-            background: #000 url("outrun-cover.jpg") center / contain no-repeat;
+            background: #000 url("./out%20run%20mega%20drive.png") center / contain no-repeat;
         }
 
         .content {
@@ -181,15 +181,15 @@
             container.classList.add("active");
             container.innerHTML = "";
 
-            // Configurações do EmulatorJS
+            // Configurações do EmulatorJS apontando para a ROM no seu repositório
             window.EJS_player = "#game-container";
             window.EJS_core = "segaMD";
-            window.EJS_gameUrl = "SUA_URL_DA_ROM_OUTRUN_AQUI.bin";
+            window.EJS_gameUrl = "https://raw.githubusercontent.com/grupoplanejar2024-coder/Out-Run-Mega-Drive/main/OutRun%20%28USA%2C%20Europe%29.gen";
             window.EJS_pathtodata = "https://cdn.emulatorjs.org/stable/data/";
             window.EJS_gameName = "OutRun";
             window.EJS_language = "pt-BR";
             window.EJS_startOnLoaded = true;
-            
+
             // Otimizações para corrigir tela preta/som sem vídeo em celulares
             window.EJS_disableDatabases = true;
             window.EJS_threads = false;
