@@ -1,266 +1,210 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="theme-color" content="#111111">
-<title>OutRun - Kubo Touch</title>
-<style>
-:root { color-scheme: dark; }
-* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-html, body { margin:0; min-height:100%; width:100%; background:#111; color:#fff; font-family:Arial,sans-serif; }
-body { display:flex; flex-direction:column; align-items:center; padding-bottom:28px; }
-header { width:100%; padding:16px; text-align:center; background:#1c1c1c; border-bottom:1px solid #333; }
-.badge { display:inline-block; padding:7px 16px; border:1px solid #555; border-radius:20px; background:#292929; color:#fff; font-size:13px; font-weight:800; letter-spacing:1.5px; }
-#game-card { width:min(460px, calc(100% - 28px)); margin:24px auto; overflow:hidden; border:1px solid #333; border-radius:15px; background:#1c1c1c; box-shadow:0 14px 38px #000b; perspective:1100px; }
-.cartridge-stage { min-height:390px; display:flex; justify-content:center; align-items:center; padding:42px 20px; overflow:hidden; background:radial-gradient(ellipse at 50% 45%,#454545 0%,#242424 58%,#171717 100%); }
-.cartridge { position:relative; width:min(270px,72vw); aspect-ratio:0.79; padding:18px 17px 24px; border:2px solid #55585d; border-radius:13px 13px 9px 9px; background:linear-gradient(110deg,#34363a 0%,#17191c 24%,#292b2f 70%,#111 100%); box-shadow:0 23px 25px #000b,inset 0 3px 5px #ffffff28,inset 0 -10px 14px #0009; transform-style:preserve-3d; transition:transform .18s ease; }
-.cartridge::before { content:""; position:absolute; top:9px; left:12px; right:12px; height:9px; border-radius:4px; background:repeating-linear-gradient(90deg,#101113 0 7px,#44474b 7px 10px); box-shadow:0 1px 2px #fff2; }
-.cartridge::after { content:""; position:absolute; left:14px; right:14px; bottom:8px; height:8px; border-radius:2px; background:linear-gradient(#111,#45474b,#111); box-shadow:inset 0 1px 2px #fff2; }
-.label-frame { position:relative; width:100%; height:88%; margin-top:9px; padding:5px; border:1px solid #777; border-radius:3px; background:linear-gradient(135deg,#777,#222 35%,#555); box-shadow:0 7px 12px #000a,inset 0 1px 3px #fff5; transform:translateZ(9px); }
-.cartridge-label { display:block; width:100%; height:100%; object-fit:cover; object-position:center; border:1px solid #111; border-radius:1px; }
-.content { padding:22px; }
-h1 { margin:0 0 12px; font-size:26px; color:#f1f1f1; text-shadow:0 2px 5px #000; }
-.meta { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:16px; }
-.meta span { padding:6px 9px; border-radius:5px; background:#292929; color:#bbb; font-size:12px; }
-.description { margin:0 0 17px; color:#ddd; font-size:14px; line-height:1.65; }
-.details { margin:0 0 21px; padding-left:20px; color:#bbb; font-size:13px; line-height:1.8; }
-.play { width:100%; padding:16px; border:1px solid #e24b35; border-radius:8px; background:linear-gradient(145deg,#e34c32,#a51f1c); color:#fff; font-size:17px; font-weight:800; cursor:pointer; box-shadow:0 5px 12px #0006; }
-.play:active { transform:scale(.985); }
-.note { margin:12px 0 0; color:#999; font-size:11px; line-height:1.5; }
-#game-container { display:none; position:fixed; inset:0; z-index:99999; width:100%; height:100%; height:100dvh; background:#000; }
-#back-to-card { position:fixed; top:12px; left:12px; z-index:100001; padding:8px 12px; border:1px solid #555; border-radius:8px; background:#1c1c1cd9; color:#fff; font-size:12px; font-weight:700; cursor:pointer; }
-#back-to-card:active { transform:scale(.97); }
-#game { width:100%; height:100%; }
-#loading-message { display:none; position:fixed; z-index:100000; left:50%; top:50%; transform:translate(-50%,-50%); width:min(88%,390px); padding:20px; border:1px solid #555; border-radius:10px; background:#202020; color:#fff; text-align:center; line-height:1.5; box-shadow:0 12px 30px #000c; }
-#loading-message .actions { display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin-top:14px; }
-#loading-message .retry-btn { padding:9px 16px; border:1px solid #777; border-radius:6px; background:#333; color:#fff; font-size:13px; font-weight:700; cursor:pointer; }
-#loading-message .retry-btn.primary { border-color:#e24b35; background:#b82921; }
-@media (max-width:480px) { .cartridge-stage { min-height:340px; padding:32px 15px; } .cartridge { width:min(245px,72vw); } .content { padding:18px; } h1 { font-size:23px; } }
-@media (prefers-reduced-motion:reduce) { .cartridge { transition:none; } }
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#0d0f17" />
+  <title>OutRun — Sega Mega Drive | Kubo Touch</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background: radial-gradient(circle at top, #1b2238 0%, #0b0d14 70%);
+      color: #f4f6fb;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      gap: 16px;
+    }
+
+    .card-container {
+      width: 100%;
+      max-width: 440px;
+      background: rgba(20, 24, 38, 0.92);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 20px;
+      padding: 18px;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.55);
+      text-align: center;
+    }
+
+    .badge {
+      display: inline-block;
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #ff4d6d;
+      background: rgba(255, 77, 109, 0.14);
+      border: 1px solid rgba(255, 77, 109, 0.35);
+      padding: 4px 10px;
+      border-radius: 999px;
+      margin-bottom: 10px;
+    }
+
+    h1 {
+      font-size: 1.45rem;
+      font-weight: 800;
+      margin-bottom: 4px;
+    }
+
+    .subtitle {
+      font-size: 0.88rem;
+      color: #a3adc2;
+      margin-bottom: 16px;
+    }
+
+    .cover-box {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 3 / 4;
+      max-height: 360px;
+      margin: 0 auto 16px;
+      border-radius: 14px;
+      overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      background: #121520;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .cover-box img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .btn-play {
+      width: 100%;
+      padding: 14px 20px;
+      font-size: 1rem;
+      font-weight: 700;
+      color: #ffffff;
+      background: linear-gradient(135deg, #ff2a55, #ff6b35);
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: transform 0.15s ease, filter 0.15s ease;
+    }
+
+    .btn-play:active {
+      transform: scale(0.98);
+      filter: brightness(0.95);
+    }
+
+    .local-rom {
+      margin-top: 12px;
+      font-size: 0.8rem;
+      color: #9aa4b8;
+    }
+
+    .local-rom input[type="file"] {
+      display: none;
+    }
+
+    .local-link {
+      color: #6ea8fe;
+      text-decoration: underline;
+      cursor: pointer;
+      font-weight: 600;
+    }
+
+    #emulator-wrapper {
+      display: none;
+      width: 100%;
+      max-width: 960px;
+      aspect-ratio: 4 / 3;
+      background: #000;
+      border-radius: 16px;
+      overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.7);
+    }
+
+    #game {
+      width: 100%;
+      height: 100%;
+    }
+  </style>
 </head>
 <body>
-<header id="header-bar"><span class="badge">KUBO TOUCH</span></header>
-<main id="game-card">
-  <section class="cartridge-stage" id="cartridge-stage" aria-label="Cartucho 3D do OutRun">
-    <div class="cartridge" id="cartridge3d">
-      <div class="label-frame">
-        <img class="cartridge-label" src="out run mega drive.png" alt="Capa do jogo OutRun para Sega Genesis" onerror="this.style.display='none'; this.parentElement.style.background='#171717'; this.parentElement.insertAdjacentHTML('beforeend','<div style=&quot;color:#fff;text-align:center;padding:35px 8px;font-weight:bold&quot;>OUTRUN<br><small>SEGA GENESIS</small><br><br>Coloque a imagem<br>out run mega drive.png<br>na mesma pasta do HTML</div>')">
-      </div>
-    </div>
-  </section>
-  <section class="content">
+
+  <div class="card-container" id="launcher">
+    <span class="badge">Sega Mega Drive • 1991</span>
     <h1>OutRun</h1>
-    <div class="meta">
-      <span>🎮 1 Jogador</span><span>📅 1987 / versão Mega Drive 1991</span><span>🕹️ SEGA Genesis</span>
+    <p class="subtitle">Kubo Touch — Toque em jogar para iniciar</p>
+
+    <div class="cover-box">
+      <!-- Substitua COVER_DATA_URI pela imagem da capa se quiser embuti-la via data URL -->
+      <img id="cover-img" src="./outrun-cover.jpg" alt="Capa do jogo OutRun Sega Mega Drive" onerror="this.style.display='none'" />
     </div>
-    <p class="description">Assuma o volante, acelere por estradas ensolaradas e escolha seu caminho neste clássico de corrida da SEGA. Desvie do tráfego, domine as curvas e tente chegar ao final antes do tempo acabar.</p>
-    <ul class="details">
-      <li><strong>Gênero:</strong> Corrida / Arcade</li>
-      <li><strong>Console:</strong> Mega Drive / Genesis</li>
-      <li><strong>Desenvolvedora:</strong> SEGA</li>
-    </ul>
-    <button id="play-btn" class="play" type="button">🏎️ JOGAR AGORA</button>
-    <p class="note">A ROM deve estar na mesma pasta do HTML. Use somente uma cópia que você tenha direito de utilizar.</p>
-  </section>
-</main>
-<div id="game-container">
-  <button id="back-to-card" type="button">← Cartão</button>
-  <div id="game"></div>
-</div>
-<div id="loading-message" role="status"></div>
-<script>
-// ARQUIVO DA ROM:
-// Aponte para o ficheiro da ROM na mesma pasta (ex.: './Out-Run.sms' ou './OutRun (USA).bin').
-const ROM_FILE = './Out-Run.sms';
 
-// CDNs do EmulatorJS com fallback automático caso o download do núcleo falhe.
-const EJS_CDN_LIST = [
-  'https://cdn.emulatorjs.org/stable/data/',
-  'https://cdn.jsdelivr.net/gh/EmulatorJS/EmulatorJS@main/data/',
-  'https://rawcdn.githack.com/EmulatorJS/EmulatorJS/main/data/'
-];
+    <button class="btn-play" id="start-btn" type="button">▶ Iniciar Jogo</button>
 
-function detectCoreFromRom(romPath) {
-  const cleanUrl = romPath.split('?')[0].split('#')[0].toLowerCase();
-  if (cleanUrl.endsWith('.sms')) return 'sms';
-  return 'segaMD';
-}
+    <div class="local-rom">
+      Ou <label for="rom-input" class="local-link">selecione o arquivo da ROM (.md / .bin)</label>
+      <input type="file" id="rom-input" accept=".md,.bin,.gen,.smd,.zip" />
+    </div>
+  </div>
 
-// Efeito 3D com mouse (desktop) e inclinação suave no retorno.
-const stage = document.getElementById('cartridge-stage');
-const cartridge = document.getElementById('cartridge3d');
-if (window.matchMedia('(hover: hover) and (pointer: fine)').matches) {
-  stage.addEventListener('mousemove', (event) => {
-    const rect = stage.getBoundingClientRect();
-    const x = (event.clientX - rect.left) / rect.width - 0.5;
-    const y = (event.clientY - rect.top) / rect.height - 0.5;
-    cartridge.style.transform = `rotateX(${-y * 12}deg) rotateY(${x * 15}deg) translateY(-3px)`;
-  });
-  stage.addEventListener('mouseleave', () => { cartridge.style.transform = 'rotateX(0) rotateY(0)'; });
-}
+  <div id="emulator-wrapper">
+    <div id="game"></div>
+  </div>
 
-const headerBar = document.getElementById('header-bar');
-const gameCard = document.getElementById('game-card');
-const gameContainer = document.getElementById('game-container');
-const backToCardBtn = document.getElementById('back-to-card');
-const playBtn = document.getElementById('play-btn');
-const loadingMsg = document.getElementById('loading-message');
-const gameEl = document.getElementById('game');
+  <script>
+    const launcher = document.getElementById("launcher");
+    const emulatorWrapper = document.getElementById("emulator-wrapper");
+    const startBtn = document.getElementById("start-btn");
+    const romInput = document.getElementById("rom-input");
 
-let emulatorStarted = false;
-let isLaunching = false;
-let currentCdnIndex = 0;
+    let customRomUrl = null;
+    let started = false;
 
-function returnToCard() {
-  loadingMsg.style.display = 'none';
-  gameContainer.style.display = 'none';
-  headerBar.style.display = '';
-  gameCard.style.display = '';
-}
-
-function showStatus(text, options = {}) {
-  const { allowRetry = false, onRetry = null } = options;
-  loadingMsg.style.display = 'block';
-  loadingMsg.innerHTML = '';
-
-  const p = document.createElement('div');
-  p.textContent = text;
-  loadingMsg.appendChild(p);
-
-  if (allowRetry) {
-    const actions = document.createElement('div');
-    actions.className = 'actions';
-
-    if (typeof onRetry === 'function') {
-      const retryBtn = document.createElement('button');
-      retryBtn.type = 'button';
-      retryBtn.className = 'retry-btn primary';
-      retryBtn.textContent = 'Tentar novamente';
-      retryBtn.addEventListener('click', onRetry);
-      actions.appendChild(retryBtn);
-    }
-
-    const backBtn = document.createElement('button');
-    backBtn.type = 'button';
-    backBtn.className = 'retry-btn';
-    backBtn.textContent = 'Voltar';
-    backBtn.addEventListener('click', returnToCard);
-    actions.appendChild(backBtn);
-
-    loadingMsg.appendChild(actions);
-  }
-}
-
-async function verifyRomExists(url) {
-  const encodedUrl = encodeURI(url);
-  try {
-    let res = await fetch(encodedUrl, { method: 'HEAD', cache: 'no-store' });
-    if (!res.ok && res.status !== 405) {
-      res = await fetch(encodedUrl, { method: 'GET', cache: 'no-store' });
-    }
-    return res.ok;
-  } catch (_) {
-    return false;
-  }
-}
-
-function resetGameSurface() {
-  gameEl.innerHTML = '';
-  const oldScript = document.getElementById('ejs-loader-script');
-  if (oldScript) oldScript.remove();
-}
-
-function loadEmulatorFromCdn(cdnIndex, core, encodedRomUrl) {
-  if (cdnIndex >= EJS_CDN_LIST.length) {
-    isLaunching = false;
-    showStatus('Falha ao baixar o núcleo do emulador nas CDNs disponíveis. Verifique sua rede ou extensões de bloqueio.', {
-      allowRetry: true,
-      onRetry: () => {
-        currentCdnIndex = 0;
-        launchEmulator(true);
-      }
+    romInput.addEventListener("change", (event) => {
+      const file = event.target.files?.[0];
+      if (!file) return;
+      if (customRomUrl) URL.revokeObjectURL(customRomUrl);
+      customRomUrl = URL.createObjectURL(file);
+      launchEmulator(customRomUrl);
     });
-    return;
-  }
 
-  currentCdnIndex = cdnIndex;
-  const cdnBase = EJS_CDN_LIST[cdnIndex];
-  resetGameSurface();
+    startBtn.addEventListener("click", () => {
+      // Altere o caminho abaixo para o nome real da sua ROM hospedada junto ao HTML
+      const defaultRomUrl = customRomUrl || "./OutRun.md";
+      launchEmulator(defaultRomUrl);
+    });
 
-  window.EJS_player = '#game';
-  window.EJS_core = core;
-  window.EJS_gameName = 'OutRun';
-  window.EJS_color = '#d52b24';
-  window.EJS_startOnLoaded = true;
-  window.EJS_pathtodata = cdnBase;
-  window.EJS_gameUrl = encodedRomUrl;
-  window.EJS_controlScheme = core;
-  window.EJS_language = 'pt-BR';
+    function launchEmulator(romUrl) {
+      if (started) return;
+      started = true;
 
-  let settled = false;
-  const fallbackTimer = setTimeout(() => {
-    if (settled) return;
-    settled = true;
-    showStatus(`Demora ou falha na CDN (${cdnIndex + 1}/${EJS_CDN_LIST.length}). Tentando alternativa...`, false);
-    loadEmulatorFromCdn(cdnIndex + 1, core, encodedRomUrl);
-  }, 15000);
+      launcher.style.display = "none";
+      emulatorWrapper.style.display = "block";
 
-  const script = document.createElement('script');
-  script.id = 'ejs-loader-script';
-  script.src = `${cdnBase}loader.js`;
-  script.async = true;
+      window.EJS_player = "#game";
+      window.EJS_core = "segaMD";
+      window.EJS_gameName = "OutRun";
+      window.EJS_gameUrl = romUrl;
+      window.EJS_pathtodata = "https://cdn.emulatorjs.org/stable/data/";
+      window.EJS_startOnLoaded = true;
+      window.EJS_language = "pt-BR";
 
-  script.onload = () => {
-    if (settled) return;
-    settled = true;
-    clearTimeout(fallbackTimer);
-    emulatorStarted = true;
-    isLaunching = false;
-    loadingMsg.style.display = 'none';
-  };
-
-  script.onerror = () => {
-    if (settled) return;
-    settled = true;
-    clearTimeout(fallbackTimer);
-    showStatus(`Falha ao carregar emulador na CDN (${cdnIndex + 1}/${EJS_CDN_LIST.length}). Tentando próxima...`, false);
-    loadEmulatorFromCdn(cdnIndex + 1, core, encodedRomUrl);
-  };
-
-  document.body.appendChild(script);
-}
-
-async function launchEmulator(forceRestart = false) {
-  if (isLaunching) return;
-
-  if (emulatorStarted && !forceRestart) {
-    headerBar.style.display = 'none';
-    gameCard.style.display = 'none';
-    gameContainer.style.display = 'block';
-    return;
-  }
-
-  isLaunching = true;
-  headerBar.style.display = 'none';
-  gameCard.style.display = 'none';
-  gameContainer.style.display = 'block';
-  showStatus('Verificando ROM e carregando emulador...', false);
-
-  const romAvailable = await verifyRomExists(ROM_FILE);
-  if (!romAvailable) {
-    isLaunching = false;
-    showStatus(`Não foi possível encontrar a ROM (${ROM_FILE}) na mesma pasta do HTML.`, { allowRetry: true });
-    return;
-  }
-
-  const core = detectCoreFromRom(ROM_FILE);
-  loadEmulatorFromCdn(currentCdnIndex, core, encodeURI(ROM_FILE));
-}
-
-backToCardBtn.addEventListener('click', returnToCard);
-playBtn.addEventListener('click', () => launchEmulator(false));
-</script>
+      const script = document.createElement("script");
+      script.src = "https://cdn.emulatorjs.org/stable/data/loader.js";
+      script.async = true;
+      document.body.appendChild(script);
+    }
+  </script>
 </body>
 </html>
